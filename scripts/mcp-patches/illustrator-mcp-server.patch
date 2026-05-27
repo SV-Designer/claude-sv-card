@@ -1,0 +1,39 @@
+diff --git a/src/illustrator/server.py b/src/illustrator/server.py
+index 089e92e..f1f99f1 100644
+--- a/src/illustrator/server.py
++++ b/src/illustrator/server.py
+@@ -50,18 +50,13 @@ def captureIllustrator() -> list[types.TextContent | types.ImageContent]:
+         activate_script = """
+             tell application "Adobe Illustrator" to activate
+             delay 1
+-            tell application "Claude" to activate
+         """
+         subprocess.run(["osascript", "-e", activate_script])
+ 
+         result = subprocess.run(
+             [
+                 "screencapture",
+-                "-R",
+-                "0,0,960,1080",
+-                "-C",
+-                "-T",
+-                "2",
++                "-o",
+                 "-x",
+                 screenshot_path,
+             ]
+@@ -95,9 +90,11 @@ def runIllustratorScript(code: str) -> list[types.TextContent]:
+     script = code.replace('"', '\\"').replace("\n", "\\n")
+ 
+     applescript = f"""
+-        tell application "Adobe Illustrator"
+-            do javascript "{script}"
+-        end tell
++        with timeout of 600 seconds
++            tell application "Adobe Illustrator"
++                do javascript "{script}"
++            end tell
++        end timeout
+     """
+ 
+     result = subprocess.run(

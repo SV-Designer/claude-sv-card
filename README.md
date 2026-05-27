@@ -2,15 +2,78 @@
 
 StreetVoice 街聲名片自動化製作。觸發「我要製作名片 / 幫我做 SV 名片」+ 提供簽呈 PDF，自動產出 5 個交付檔（.ai 原檔 / OL CS6 / JPG 預覽 2000×780 / vCard / QR SVG）。
 
+---
+
+## 🤖 給協助安裝的 Claude（同事 A 把連結貼給你了？看這段）
+
+如果使用者把這個連結傳給你並要求協助安裝，請依下列步驟操作。**全程主動進行，僅在標註 ⏸ 的地方停下來與使用者確認。**
+
+### 前置確認 ⏸
+跟使用者確認他符合以下系統需求（任一不符就先停下來告知使用者）：
+- macOS
+- Adobe Illustrator CC 2024 以上已安裝
+- Claude Code v2.0+（既然他正在跟你對話，已具備）
+- 已安裝 `uv`（Python 套件管理器）— `command -v uv` 確認；沒裝可建議 `brew install uv`
+
+### 安裝步驟（idempotent，可重複跑）
+
+1. **clone repo**（預設位置 `~/Projects/sv-card`，可依使用者偏好調整）
+   ```bash
+   git clone https://github.com/chensoo8911/sv-card.git ~/Projects/sv-card
+   ```
+
+2. **跑 install.sh**（會自動串接 setup-mcp.sh）
+   ```bash
+   bash ~/Projects/sv-card/install.sh --yes
+   ```
+   `--yes` 模式會使用預設值（輸出 `~/Documents/SV-名片`、模板用 repo 內附範例）。若使用者另有偏好，改用互動模式 `bash ~/Projects/sv-card/install.sh` 並餵答案給 stdin。
+
+3. **install.sh 內部會做的事**（你不需手動拆解，但需要時可知道）：
+   - 檢查 Adobe Illustrator / python3 / `qrcode` 套件
+   - 自動跑 `scripts/setup-mcp.sh`：clone `spencerhhubert/illustrator-mcp-server` 到 `~/mcp-servers/`、套 sv-card patch（去掉 Claude activate + 加 600s timeout）、寫入 `~/.claude.json` 的 `mcpServers.illustrator`（會先備份 `.bak`）
+   - 在 `~/.claude/skills/sv-card/` 建 symlink（SKILL.md / scripts / templates / docs）→ 指回 repo
+   - 寫使用者偏好到 `~/.config/sv-card/env`
+
+4. **驗證 ⏸**：跟使用者說「**請重啟 Claude Code，然後跟我說一聲**」（MCP server 必須重啟 Claude Code 才會載入）
+
+5. **重啟後再驗證**：請使用者跟你說「`mcp__illustrator__run` 工具存在嗎？」你可用 ToolSearch 確認。沒有的話，可能是 `~/.claude.json` 寫入位置不對（user-level vs project-level），改寫入 project-level 看看
+
+6. **完成**：告訴使用者「現在可以對 Claude Code 說『幫我做 SV 名片』+ 附簽呈 PDF 就會觸發了」
+
+### 常見錯誤 & 修法
+
+| 症狀 | 原因 | 修法 |
+|---|---|---|
+| `setup-mcp.sh` 報 `uv: command not found` | 缺 uv | `brew install uv`，再重跑 |
+| `git apply --check` 失敗 | server.py 已被別人改過 | 看 `scripts/mcp-patches/illustrator-mcp-server.patch` 手動 merge |
+| 重啟後 Claude 仍看不到工具 | settings 寫到 project-level 而非 user-level | 直接 grep `~/.claude.json` 看 `mcpServers.illustrator` 是否在頂層 |
+| 模板 `.ai` 缺失 | repo 內 templates/ 沒抓到 | 確認 `~/.claude/skills/sv-card/templates/20260522-王小明.ai` symlink 沒斷 |
+
+---
+
+## 💁 給人類使用者（不懂程式也 OK）
+
+**最簡單方式**：把這個 README 連結貼給 Claude Code，說「**幫我安裝這個 skill**」即可。Claude 會照上面的步驟跑完整套流程，過程中只會問你 1-2 次確認（重啟 Claude Code 那邊）。
+
+安裝完成後，直接在 Claude Code 內說：
+
+> 「**幫我做 SV 名片**」+ 拖入或貼上簽呈 PDF 路徑
+
+---
+
 ## 結構
 
 ```
 sv-card/
-├── install.sh      安裝腳本（建 symlink、檢查依賴、寫使用者偏好）
-├── scripts/        執行腳本（card_helper.sh / make_card_artifacts.py / place_qr.jsx 為 SOP 三件套）
-├── templates/      Illustrator 模板（假名範例：20260522-王小明.ai）
-├── skill/          Claude Code skill 入口（SKILL.md）
-└── docs/           完整 SOP（SOP.md）
+├── install.sh           主安裝腳本
+├── scripts/
+│   ├── setup-mcp.sh     副安裝腳本（裝 illustrator-mcp-server）
+│   ├── mcp-patches/     對 mcp-server 的修改 patch
+│   ├── card_helper.sh / make_card_artifacts.py / place_qr.jsx (SOP 三件套)
+│   └── ...
+├── templates/           Illustrator 模板（假名範例 20260522-王小明.ai）
+├── skill/SKILL.md       Claude Code skill 入口
+└── docs/SOP.md          完整 SOP 與已知問題
 ```
 
 ## 系統需求
@@ -18,39 +81,21 @@ sv-card/
 - macOS（流程使用 `osascript`、`sips`、`open -a`）
 - Adobe Illustrator CC 2024 以上（建議 2026）
 - Python 3.9+
-- Python 套件：`qrcode`（install.sh 會問你要不要裝）
-- [spencerhhubert/illustrator-mcp-server](https://github.com/spencerhhubert/illustrator-mcp-server) — 需自行 clone 並加入 Claude Code 的 MCP 設定
-- Claude Code（v2.0+）
+- [`uv`](https://docs.astral.sh/uv/) — `brew install uv`
+- Claude Code v2.0+
 
-## 快速安裝
-
-```bash
-git clone https://github.com/chensoo8911/sv-card.git
-cd sv-card
-bash install.sh
-```
-
-install.sh 會做：
-
-1. 檢查 Adobe Illustrator / Python3 / qrcode 套件
-2. 偵測 illustrator-mcp-server 安裝位置（若無會印提示）
-3. 建立 `~/.claude/skills/sv-card/` 內的 symlink（SKILL.md、scripts、templates、docs）→ 指回本 repo
-4. 互動式問你的偏好（輸出資料夾、模板路徑），寫入 `~/.config/sv-card/env`
-
-安裝完成後**重啟 Claude Code**，在對話框說「**幫我做 SV 名片**」+ 附簽呈 PDF 即可觸發。
-
-> 想跳過互動問題用預設值：`bash install.sh --yes`
+`qrcode` Python 套件與 `illustrator-mcp-server` 會由 install.sh 自動處理。
 
 ## 設定覆寫
 
 `~/.config/sv-card/env` 範例：
 
 ```bash
-SV_OUTPUT_BASE="$HOME/Documents/SV-名片"   # 名片成品輸出資料夾
+SV_OUTPUT_BASE="$HOME/Documents/SV-名片"
 SV_TEMPLATE="$HOME/.claude/skills/sv-card/templates/20260522-王小明.ai"
 ```
 
-card_helper.sh 啟動時會 source 此檔；也支援直接用環境變數覆寫（環境變數優先）。
+card_helper.sh 啟動時會 source 此檔；環境變數覆寫優先。
 
 ## 產出位置
 
@@ -60,9 +105,10 @@ card_helper.sh 啟動時會 source 此檔；也支援直接用環境變數覆寫
 
 - 執行手冊（精簡）：[`skill/SKILL.md`](skill/SKILL.md)
 - 完整 SOP（含已知問題深度說明）：[`docs/SOP.md`](docs/SOP.md)
+- 變更紀錄：[`CHANGELOG.md`](CHANGELOG.md)
 
 ## 已知限制
 
 - 僅支援 StreetVoice TW 街聲版（一般名片）。子品牌（中子、CN、EN 版）尚未泛化
-- 中文路徑 saveAs 會 8700 cancel —— 流程用 /tmp 中轉繞過（card_helper.sh 已封裝）
+- 中文路徑 saveAs 會 8700 cancel —— 流程用 /tmp 中轉繞過
 - Illustrator 必須冷啟動（已運行時 `open` 可能被歡迎頁攔截）

@@ -22,7 +22,7 @@ CONFIG_FILE="$CONFIG_DIR/env"
 NON_INTERACTIVE=0
 [ "$1" = "--yes" ] && NON_INTERACTIVE=1
 
-echo "🚀 sv-card 安裝開始（repo: $REPO_DIR）"
+echo "🚀 sv-card 安裝開始（repo: ${REPO_DIR}）"
 echo
 
 # ─── 1. 依賴檢查 ────────────────────────────────────────────────
@@ -73,12 +73,43 @@ for candidate in \
         break
     fi
 done
-if [ -n "$MCP_HINT" ]; then
-    echo "  ✅ illustrator-mcp-server 偵測到於 $MCP_HINT"
+
+# 確認 ~/.claude.json 已有 illustrator MCP 設定
+HAS_MCP_CONFIG=0
+if [ -f "$HOME/.claude.json" ]; then
+    if python3 -c "
+import json, sys
+try:
+    with open('$HOME/.claude.json') as f:
+        d = json.load(f)
+    sys.exit(0 if 'illustrator' in d.get('mcpServers', {}) else 1)
+except Exception:
+    sys.exit(1)
+"; then
+        HAS_MCP_CONFIG=1
+    fi
+fi
+
+if [ -n "$MCP_HINT" ] && [ "$HAS_MCP_CONFIG" = "1" ]; then
+    echo "  ✅ illustrator-mcp-server 已安裝且設定於 $MCP_HINT"
 else
-    echo "  ⚠️  未偵測到 illustrator-mcp-server"
-    echo "      → 請從 https://github.com/spencerhhubert/illustrator-mcp-server clone"
-    echo "      → 並加入 Claude Code 的 MCP 設定（settings.json 內 mcpServers）"
+    if [ -z "$MCP_HINT" ]; then
+        echo "  ⚠️  未偵測到 illustrator-mcp-server"
+    fi
+    if [ "$HAS_MCP_CONFIG" = "0" ]; then
+        echo "  ⚠️  ~/.claude.json 內未設定 mcpServers.illustrator"
+    fi
+    echo
+    if [ "$NON_INTERACTIVE" = "1" ]; then
+        echo "  → 自動執行 setup-mcp.sh 安裝 + 設定..."
+        bash "$REPO_DIR/scripts/setup-mcp.sh" --yes
+    else
+        read -p "  → 現在自動安裝 + 設定 MCP server？[Y/n] " yn
+        case "$yn" in
+            [Nn]*) echo "  → 跳過。請事後手動執行：bash $REPO_DIR/scripts/setup-mcp.sh" ;;
+            *) bash "$REPO_DIR/scripts/setup-mcp.sh" ;;
+        esac
+    fi
 fi
 echo
 
