@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+## [0.4.5] — 2026-05-27
+
+### Changed
+- `card_helper.sh save-ol` 跑完自動 `ls -la` 列出 5 個交付檔（整合進子命令，避免 SKILL.md Step 10 出現 `&& ls -la` multi-statement command）
+- SKILL.md Step 10 簡化為單一 `save-ol` 呼叫
+
+### Documentation
+- README「給 Claude」section 加強重啟提醒：`~/.claude/settings.json` allow 清單也是 session 啟動時讀一次，重啟才會生效（不重啟，安裝完當下做名片每個 Bash 還是會 prompt）
+
 ## [0.4.4] — 2026-05-27
 
 ### Added

@@ -150,6 +150,9 @@ EOF
 
         mv /tmp/output_ol.ai "$dest/OL-${basename}.ai"
         echo "✅ OL → $dest/OL-${basename}.ai"
+        echo
+        echo "📁 最終產出："
+        ls -la "$dest/"
         ;;
 
     *)

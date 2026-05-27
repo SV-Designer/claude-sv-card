@@ -157,10 +157,11 @@ opts.compatibility = Compatibility.ILLUSTRATOR16;
 d.saveAs(new File("/tmp/output_ol.ai"), opts);
 ```
 
-### Step 10：搬 OL
+### Step 10：搬 OL + 列最終產出
 ```bash
 ~/.claude/skills/sv-card/scripts/card_helper.sh save-ol "$DEST_DIR" "$BASENAME"
 ```
+（save-ol 內部會自動 `ls -la` 列出 5 個交付檔，不需另跑 ls 命令）
 
 ## 📂 最終產出
 
