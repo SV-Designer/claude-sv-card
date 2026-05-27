@@ -216,12 +216,13 @@ else:
 
 data.setdefault("permissions", {}).setdefault("allow", [])
 allow = data["permissions"]["allow"]
-home = os.path.expanduser("~")
+# 用 ~ 形式（字面字串）— Claude Code 對 allow rule 是字面比對，
+# Bash 命令字串通常以 ~/... 出現，故 ~ 形式才會 match。
 to_add = [
-    f"Bash({home}/.claude/skills/sv-card/scripts/card_helper.sh:*)",
-    f"Bash(python3 {home}/.claude/skills/sv-card/scripts/make_card_artifacts.py:*)",
-    f"Bash({home}/.claude/skills/sv-card/install.sh:*)",
-    f"Bash({home}/.claude/skills/sv-card/scripts/setup-mcp.sh:*)",
+    "Bash(~/.claude/skills/sv-card/scripts/card_helper.sh:*)",
+    "Bash(python3 ~/.claude/skills/sv-card/scripts/make_card_artifacts.py:*)",
+    "Bash(~/.claude/skills/sv-card/install.sh:*)",
+    "Bash(~/.claude/skills/sv-card/scripts/setup-mcp.sh:*)",
     "mcp__illustrator__run",
 ]
 added = []

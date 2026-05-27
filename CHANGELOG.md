@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [0.4.3] — 2026-05-27
+
+### Fixed
+- install.sh 寫入的 allow 規則用絕對路徑（`/Users/X/.claude/...`），但 Claude Code 實際看到的 Bash 命令字串是 `~/.claude/...`，字面比對不 match，導致使用者裝完仍會被每個 sv-card Bash 命令 prompt
+- 改用 `~` 形式（字面字串）寫入 allow 規則，與 SKILL.md 內的命令字串一致
+
 ## [0.4.2] — 2026-05-27
 
 ### Fixed
