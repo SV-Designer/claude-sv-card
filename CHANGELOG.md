@@ -6,6 +6,40 @@
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-05-27
+
+### Added
+- **Sidecar JSON 機制** `/tmp/sv_card_fields.json`：`card_helper.sh init` 寫入，含 `fields`（7 個 PH_*）+ `artifacts`（vCard/QR 欄位）兩區塊，後續 Step 2/3 自動讀取
+- `make_card_artifacts.py --from <json>` 模式：從 sidecar 的 `artifacts` 區塊讀，取代命名參數
+- `replace_fields.jsx` 讀 sidecar：預設讀 `/tmp/sv_card_fields.json` 的 `fields` 區塊
+- `SV_SIDECAR` 環境變數：可覆寫預設 sidecar 路徑
+- **`BridgeTalk.bringToFront(BridgeTalk.appName)` 加入 3 個 jsx 開頭**（place_qr / finalize / replace_fields）：解決 macOS 對背景 GUI app 限速問題（app.open / executeMenuCommand / saveAs 大檔特別明顯）。效果：Illustrator dock icon 跳動提示使用者，禮貌 attention 不強制搶焦點
+
+### Changed
+- **`card_helper.sh init` 介面破壞性變更**：從位置參數 `init "中文" "英文"` 改為 named-args `init --chinese ... --english ... --surname ... --given ... --title ... --email ... --mobile ... --office-ext ...`。init 內部推導 mobile-display（空格→dash）、vcf-name（英文名去空格）、PH_PHONE_OFFICE（+886-2-2741-7065#分機）
+- **SKILL.md Step 2 mcp call 變固定字串**：原本 inline `$.global.FIELDS = {...}` JSON literal 不再需要，Claude 直接 `$.evalFile(replace_fields.jsx)`
+- **SKILL.md Step 3 bash 變固定字串**：原本 7 個 `--xxx` 命名參數不再需要，Claude 直接 `card_helper.sh artifacts`
+- `make_card_artifacts.py` 命名參數全部改 optional（搭配 sidecar 模式），缺欄位時統一回報
+
+### Fixed
+- **`replace_fields.jsx` 來源優先級**：原本邏輯 `if (!$.global.FIELDS) read sidecar` 在 Illustrator session 內會踩雷 — `$.global` 跨 mcp call 持續存在，導致前次測試殘留的 FIELDS 永遠優先於 sidecar，連續做兩張不同名片時會用第一張的資料替換第二張。
+  - 修為 **sidecar 優先**：sidecar 存在就用 sidecar（當前流程權威來源），`$.global.FIELDS` 降級為 emergency override
+  - 執行完順手 `$.global.FIELDS = null` 清掉殘留，避免下次 sidecar 缺席時誤用
+
+### Rationale
+Step 2 與 Step 3 的資料 80% 重疊（5 個共用欄位 + 2 個格式差異）。原本 Claude 要在兩個 step 各自輸入一次，容易抄錯（特別是中文職稱、手機格式）。改成 init 階段一次填寫、後續從 sidecar 讀取後：
+
+- Claude 全流程「需要填資料」的 step 數：3 個 → 1 個（僅 init）
+- Step 2 mcp call 內容長度：~250 char → ~120 char
+- Step 3 bash 命令長度：~250 char → ~60 char
+- 杜絕「Step 2 填 A、Step 3 填 B」的資料漂移風險
+
+### Testing
+- 連跑兩張不同名片（同事 A → 同事 B）實測通過：
+  1. 第一張完整流程跑通，5 個交付檔正確
+  2. 第二張：sidecar 優先機制驗證有效（替換後內容是新名片而非殘留）
+  3. BridgeTalk 在 finalize.jsx 觸發 dock 跳動，不強制搶焦點
+
 ## [0.5.0] — 2026-05-27
 
 ### Added

@@ -133,71 +133,70 @@ Claude 用 Read tool 讀 PDF，萃取：
 - 手機（例如 `0900-000-000`，會被規格化為 `+886-900-000-000`）
 - Email
 
-### Step 3 + 4 + 5：合併呼叫 `card_helper.sh init`
+### Step 3 + 4 + 5 + 8 預備：合併呼叫 `card_helper.sh init`（吃所有原始欄位）
 
-單一 Bash 指令完成 建資料夾 + 複製模板 + 開檔 + 輪詢：
+單一 Bash 指令完成 建資料夾 + 複製模板 + 開檔 + 輪詢 + **寫 sidecar JSON**：
 ```bash
-~/.claude/skills/sv-card/scripts/card_helper.sh init "王小明" "Ming Wang"
+~/.claude/skills/sv-card/scripts/card_helper.sh init \
+    --chinese "王小明" --english "Ming Wang" \
+    --surname "王" --given "小明" \
+    --title "美術設計" \
+    --email "mingwang@streetvoice.com" \
+    --mobile "+886 900 000 000" \
+    --office-ext "395"
 ```
 
-**英文名取「去 alias」版本：** 若英文名是 `阿明 Ming Wang`，取 `Ming Wang`（規則：移除最前面的中文 alias 部分）
+**英文名取「去 alias」版本：** 若英文名是 `阿明 Ming Wang`，`--english` 取 `Ming Wang`（規則：移除最前面的中文 alias 部分）
 
 腳本內部行為：
 1. `mkdir -p $SV_OUTPUT_BASE/{chinese}_{english}`（路徑來自 `~/.config/sv-card/env` 或環境變數，預設 `~/Documents/SV-名片/`）
 2. `cp -L $SV_TEMPLATE` 到該資料夾並重新命名為 `{YYYYMMDD}-{chinese}_{english}.ai`（模板預設 `~/.claude/skills/sv-card/templates/20260522-王小明.ai`）
-3. `open -a "Adobe Illustrator" "$NEW_FILE"`
-4. 輪詢 osascript（最多 60 秒）直到 activeDocument 就緒
-5. 印出 `BASENAME=...` 和 `DEST_DIR=...` 供後續 Step 12 使用
+3. **寫 sidecar `/tmp/sv_card_fields.json`**，內含 `fields` 區塊（7 個 PH_*）+ `artifacts` 區塊（vCard/QR 所需欄位）。內部推導：
+   - `mobile_display = mobile.replace(" ", "-")` → 名片用
+   - `vcf_name = en.replace(" ", "") + ".vcf"`
+   - `PH_PHONE_OFFICE = "+886-2-2741-7065#" + office_ext`
+4. `open -a "Adobe Illustrator" "$NEW_FILE"`
+5. 輪詢 osascript（最多 60 秒）直到 activeDocument 就緒
+6. 印出 `BASENAME=...` 和 `DEST_DIR=...` 供後續 Step 12 使用
 
 > ⚠️ 若 Illustrator 已運行且停在歡迎頁，`open` 有可能被攔截。腳本會偵測並警告。**建議冷啟動**（觸發後第一句話「請確保 illustator 為關閉狀態」就是要使用者先關掉）。
 >
 > 冷啟動實測：Illustrator 啟動 + 載檔 + textFrames 就緒約 1 秒內完成。
 
-### Step 6 + 7：Claude 替換 7 欄位 + 自動存檔（合併呼叫 `replace_fields.jsx`）
+### Step 6 + 7：Claude 替換 7 欄位 + 自動存檔（呼叫 `replace_fields.jsx`）
 
-Claude 透過 MCP 執行：
+Claude 透過 MCP 執行（**無需傳資料，自動讀 sidecar**）：
 
 ```javascript
-$.global.FIELDS = {
-    PH_NAME_CN_SURNAME: "姓",
-    PH_NAME_CN_GIVEN:   "名",
-    PH_NAME_EN:         "英文名",
-    PH_TITLE:           "職稱",
-    PH_PHONE_OFFICE:    "+886-2-2741-7065#分機",
-    PH_PHONE_MOBILE:    "+886-XXX-XXX-XXX",
-    PH_EMAIL:           "email@streetvoice.com"
-};
 $.evalFile(Folder("~").fsName + "/.claude/skills/sv-card/scripts/replace_fields.jsx");
 ```
 
 replace_fields.jsx 內部行為：
-1. 建立 `name → TextFrame` 索引（避免每欄位都全表掃）
-2. 對每個 `PH_*` key 找對應 TextFrame，找不到就累積到 missing 列表
-3. 全部處理完才一次回報 missing（不中斷，便於 Claude 一次收集問題）
-4. 完成後自動 `d.save()`
+1. **若 `$.global.FIELDS` 未設，自動讀 `/tmp/sv_card_fields.json` 的 `fields` 區塊**
+2. 建立 `name → TextFrame` 索引（避免每欄位都全表掃）
+3. 對每個 `PH_*` key 找對應 TextFrame，找不到就累積到 missing 列表
+4. 全部處理完才一次回報 missing（不中斷，便於 Claude 一次收集問題）
+5. 完成後自動 `d.save()`
 
-> 為什麼抽成 jsx：避免 SKILL.md 內 inline JS 字串轉義問題，模板欄位增減也不用改 SKILL.md。替換邏輯是確定性的，不需使用者目視，JPG 預覽（Step 12）才是最後品管關卡。
+> 為什麼抽成 jsx + sidecar：避免 SKILL.md 內 inline JSON literal 重複（init 已收過一次資料），mcp call 內容變固定字串，模板欄位增減也不用改 SKILL.md。
 
-### Step 8 + 9 + 10a：合併呼叫 `make_card_artifacts.py`
+### Step 8 + 9 + 10a：呼叫 `card_helper.sh artifacts`（無參數，從 sidecar 讀）
 
 單一 Bash 指令完成 vCard、QR SVG、預處理：
 ```bash
-python3 ~/.claude/skills/sv-card/scripts/make_card_artifacts.py \
-    --surname "王" --given "小明" --en "Ming Wang" \
-    --title "美術設計" \
-    --email "mingwang@streetvoice.com" \
-    --mobile "+886 900 000 000" \
-    --folder "$DEST_DIR" \
-    --vcf-name "MingWang.vcf"
+~/.claude/skills/sv-card/scripts/card_helper.sh artifacts
 ```
 
-這支腳本內部做 3 件事（取代舊版的 python3 heredoc）：
+此命令無 args 時自動帶 `--from /tmp/sv_card_fields.json`，從 sidecar 的 `artifacts` 區塊讀：surname / given / en / title / email / mobile / folder / vcf_name。
+
+腳本內部做 3 件事：
 1. 產生 vCard `{folder}/{vcf-name}` — 用 make_vcard.make_vcard
 2. 產生 QR SVG `{folder}/QR Code.svg`，內容是 URL `http://drive.streetvoice.com/vcard/{vcf-name}`
 3. 預處理 SVG → `/tmp/qr_processed.svg`（剝 `id="bg"` 背景白底，供 place_qr.jsx 匯入）
 
-> 為什麼抽腳本：避免 inline python3 heredoc 每次都要審「看不懂的程式碼」。
-> settings.json 用 `Bash(python3 ~/.claude/skills/sv-card/scripts/make_card_artifacts.py:*)` 精準允許這一個腳本路徑。
+> 為什麼從 sidecar 讀：消除與 Step 6 替換 7 欄位的重複輸入；Claude 全流程只在 Step 3（init）填一次資料。
+>
+> 向後相容：`card_helper.sh artifacts --surname ... --given ...` 命名參數模式仍可用。
 
 > ⚠️ vCard URL 編碼進 QR 後，**.vcf 仍需使用者事後上傳到 drive.streetvoice.com/vcard/**，否則掃描會 404。腳本印出的 URL 是給使用者事後上傳對齊用。
 

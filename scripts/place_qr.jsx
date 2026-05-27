@@ -20,6 +20,9 @@
 // 回傳：成功 → "OK pos=x,y size=sz"；失敗 → "ERROR: ..."
 
 (function() {
+    // 帶到前景，避免 macOS 對背景 GUI app 限速（特別是 app.open + executeMenuCommand）
+    try { BridgeTalk.bringToFront(BridgeTalk.appName); } catch (e) {}
+
     var opts = $.global.QR_OPTS;
     if (!opts) { return "ERROR: QR_OPTS not set"; }
     if (!opts.svgPath) { return "ERROR: QR_OPTS.svgPath missing"; }

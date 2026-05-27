@@ -9,13 +9,15 @@
 #
 #   card_helper.sh confirm-firstrun <output-path>
 #       首次製作確認：mkdir + open Finder + 寫 env (SV_OUTPUT_CONFIRMED=1)
-#       <output-path> 可帶 ~ 或絕對路徑
 #
-#   card_helper.sh artifacts <args...>
-#       forward 所有 args 給 make_card_artifacts.py，產 vCard + QR + 預處理 SVG
+#   card_helper.sh init --chinese "..." --english "..." --surname "..." --given "..." \
+#                       --title "..." --email "..." --mobile "..." --office-ext "..."
+#       建資料夾 + 複製模板 + 開 Illustrator + 輪詢 + 寫 sidecar /tmp/sv_card_fields.json
+#       sidecar 內含 Step 2 (fields) + Step 3 (artifacts) 兩區塊，後續步驟皆從此讀取
 #
-#   card_helper.sh init <chinese-full-name> <english-name>
-#       建資料夾 + 複製模板 + 開 Illustrator + 輪詢直到 doc 就緒
+#   card_helper.sh artifacts [args...]
+#       無 args → 預設讀 /tmp/sv_card_fields.json 的 artifacts 區塊
+#       有 args → forward 給 make_card_artifacts.py（向後相容）
 #
 #   card_helper.sh save-original <dest-folder> <basename>
 #       從 /tmp 搬 output_original.ai 到 <dest-folder>/<basename>.ai
@@ -30,6 +32,7 @@
 #
 # basename 格式範例：20260527-王小明_Ming Wang
 # dest-folder 格式範例：~/Documents/SV-名片/王小明_Ming Wang
+# sidecar 路徑：/tmp/sv_card_fields.json
 
 set -e
 
@@ -40,6 +43,7 @@ set -e
 SV_CARD_SKILL_DIR="${SV_CARD_SKILL_DIR:-$HOME/.claude/skills/sv-card}"
 SV_TEMPLATE="${SV_TEMPLATE:-$SV_CARD_SKILL_DIR/templates/20260522-王小明.ai}"
 SV_OUTPUT_BASE="${SV_OUTPUT_BASE:-$HOME/Documents/SV-名片}"
+SV_SIDECAR="${SV_SIDECAR:-/tmp/sv_card_fields.json}"
 
 if [ ! -f "$SV_TEMPLATE" ]; then
     echo "ERROR: 找不到模板 .ai 檔: $SV_TEMPLATE" >&2
@@ -61,8 +65,16 @@ case "$cmd" in
         ;;
 
     artifacts)
-        # 把所有 args forward 給 make_card_artifacts.py
-        exec python3 "$SV_CARD_SKILL_DIR/scripts/make_card_artifacts.py" "$@"
+        # 無 args → 預設讀 sidecar；有 args → 沿用 forward 模式
+        if [ $# -eq 0 ]; then
+            if [ ! -f "$SV_SIDECAR" ]; then
+                echo "ERROR: 找不到 sidecar: $SV_SIDECAR（需先跑 init）" >&2
+                exit 1
+            fi
+            exec python3 "$SV_CARD_SKILL_DIR/scripts/make_card_artifacts.py" --from "$SV_SIDECAR"
+        else
+            exec python3 "$SV_CARD_SKILL_DIR/scripts/make_card_artifacts.py" "$@"
+        fi
         ;;
 
     confirm-firstrun)
@@ -91,10 +103,43 @@ EOF
         ;;
 
     init)
-        chinese_full="$1"
-        english_name="$2"
-        if [ -z "$chinese_full" ] || [ -z "$english_name" ]; then
-            echo "ERROR: init 需要 <chinese-full> <english-name>" >&2
+        # 解析 named args
+        chinese_full=""
+        english_name=""
+        surname=""
+        given=""
+        title=""
+        email=""
+        mobile=""
+        office_ext=""
+        while [ $# -gt 0 ]; do
+            case "$1" in
+                --chinese)    chinese_full="$2"; shift 2 ;;
+                --english)    english_name="$2"; shift 2 ;;
+                --surname)    surname="$2"; shift 2 ;;
+                --given)      given="$2"; shift 2 ;;
+                --title)      title="$2"; shift 2 ;;
+                --email)      email="$2"; shift 2 ;;
+                --mobile)     mobile="$2"; shift 2 ;;
+                --office-ext) office_ext="$2"; shift 2 ;;
+                *)
+                    echo "ERROR: init 不認識的參數: $1" >&2
+                    exit 1 ;;
+            esac
+        done
+
+        # 必填檢查
+        missing=""
+        for kv in "chinese:$chinese_full" "english:$english_name" "surname:$surname" \
+                  "given:$given" "title:$title" "email:$email" "mobile:$mobile" \
+                  "office-ext:$office_ext"; do
+            k="${kv%%:*}"; v="${kv#*:}"
+            [ -z "$v" ] && missing="$missing --$k"
+        done
+        if [ -n "$missing" ]; then
+            echo "ERROR: init 缺少必填參數:$missing" >&2
+            echo "用法: init --chinese ... --english ... --surname ... --given ..." >&2
+            echo "          --title ... --email ... --mobile ... --office-ext ..." >&2
             exit 1
         fi
 
@@ -106,6 +151,41 @@ EOF
         mkdir -p "$dest_dir"
         cp -L "$SV_TEMPLATE" "$new_file"
         echo "✅ 模板已複製: $new_file"
+
+        # 寫 sidecar JSON（推導 mobile_display、vcf_name、ph_phone_office）
+        SURNAME="$surname" GIVEN="$given" EN="$english_name" \
+        TITLE="$title" EMAIL="$email" MOBILE="$mobile" \
+        OFFICE_EXT="$office_ext" DEST_DIR="$dest_dir" \
+        python3 - <<'PYEOF' > "$SV_SIDECAR"
+import json, os
+mobile_vcard = os.environ["MOBILE"]
+mobile_display = mobile_vcard.replace(" ", "-")
+en = os.environ["EN"]
+vcf_name = en.replace(" ", "") + ".vcf"
+data = {
+    "fields": {
+        "PH_NAME_CN_SURNAME": os.environ["SURNAME"],
+        "PH_NAME_CN_GIVEN":   os.environ["GIVEN"],
+        "PH_NAME_EN":         en,
+        "PH_TITLE":           os.environ["TITLE"],
+        "PH_PHONE_OFFICE":    "+886-2-2741-7065#" + os.environ["OFFICE_EXT"],
+        "PH_PHONE_MOBILE":    mobile_display,
+        "PH_EMAIL":           os.environ["EMAIL"],
+    },
+    "artifacts": {
+        "surname":  os.environ["SURNAME"],
+        "given":    os.environ["GIVEN"],
+        "en":       en,
+        "title":    os.environ["TITLE"],
+        "email":    os.environ["EMAIL"],
+        "mobile":   mobile_vcard,
+        "folder":   os.environ["DEST_DIR"],
+        "vcf_name": vcf_name,
+    },
+}
+print(json.dumps(data, ensure_ascii=False, indent=2))
+PYEOF
+        echo "✅ sidecar 寫入: $SV_SIDECAR"
 
         if pgrep -x "Adobe Illustrator" > /dev/null; then
             echo "⚠️ Illustrator 已在運行，open 可能被歡迎頁攔截。建議冷啟動。"
@@ -189,8 +269,9 @@ EOF
         echo "Usage:" >&2
         echo "  $0 check-firstrun" >&2
         echo "  $0 confirm-firstrun <output-path>" >&2
-        echo "  $0 artifacts <args...>" >&2
-        echo "  $0 init <chinese-full> <english-name>" >&2
+        echo "  $0 init --chinese ... --english ... --surname ... --given ..." >&2
+        echo "              --title ... --email ... --mobile ... --office-ext ..." >&2
+        echo "  $0 artifacts [args...]" >&2
         echo "  $0 save-original <dest-folder> <basename>" >&2
         echo "  $0 save-ol <dest-folder> <basename>" >&2
         echo "  $0 finalize <dest-folder> <basename>" >&2

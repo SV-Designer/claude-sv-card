@@ -16,6 +16,9 @@
 // 回傳：成功 → "OK removed=N original=path ol=path"；失敗 → "ERROR: ..."
 
 (function() {
+    // 帶到前景，避免 macOS 對背景 GUI app 限速（saveAs 大檔特別明顯）
+    try { BridgeTalk.bringToFront(BridgeTalk.appName); } catch (e) {}
+
     var opts = $.global.FINALIZE_OPTS || {};
     var originalTmp = opts.originalTmp || "/tmp/output_original.ai";
     var olTmp = opts.olTmp || "/tmp/output_ol.ai";
