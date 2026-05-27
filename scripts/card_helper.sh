@@ -59,10 +59,10 @@ case "$cmd" in
             echo "ERROR: confirm-firstrun 需要 <output-path>" >&2
             exit 1
         fi
-        # 處理 ~ 展開（避免 eval 注入）
+        # 處理 ~ 展開（避免 eval 注入；不能用 ${out#~/} 因為 bash 會對 pattern 內的 ~ 做 tilde expansion）
         case "$out" in
             "~")    out="$HOME" ;;
-            "~/"*)  out="$HOME/${out#~/}" ;;
+            "~/"*)  out="$HOME${out:1}" ;;
         esac
         mkdir -p "$out"
         open "$out"
