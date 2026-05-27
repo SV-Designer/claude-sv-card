@@ -101,7 +101,7 @@ app.activeDocument.save();
 
 ### Step 3：產 vCard + QR + 預處理 SVG
 ```bash
-python3 ~/.claude/skills/sv-card/scripts/make_card_artifacts.py \
+~/.claude/skills/sv-card/scripts/card_helper.sh artifacts \
     --surname "X" --given "XX" --en "Foo Bar" \
     --title "..." \
     --email "...@streetvoice.com" \

@@ -11,6 +11,9 @@
 #       首次製作確認：mkdir + open Finder + 寫 env (SV_OUTPUT_CONFIRMED=1)
 #       <output-path> 可帶 ~ 或絕對路徑
 #
+#   card_helper.sh artifacts <args...>
+#       forward 所有 args 給 make_card_artifacts.py，產 vCard + QR + 預處理 SVG
+#
 #   card_helper.sh init <chinese-full-name> <english-name>
 #       建資料夾 + 複製模板 + 開 Illustrator + 輪詢直到 doc 就緒
 #
@@ -51,6 +54,11 @@ case "$cmd" in
         else
             echo "run-step0"
         fi
+        ;;
+
+    artifacts)
+        # 把所有 args forward 給 make_card_artifacts.py
+        exec python3 "$SV_CARD_SKILL_DIR/scripts/make_card_artifacts.py" "$@"
         ;;
 
     confirm-firstrun)
@@ -148,6 +156,7 @@ EOF
         echo "Usage:" >&2
         echo "  $0 check-firstrun" >&2
         echo "  $0 confirm-firstrun <output-path>" >&2
+        echo "  $0 artifacts <args...>" >&2
         echo "  $0 init <chinese-full> <english-name>" >&2
         echo "  $0 save-original <dest-folder> <basename>" >&2
         echo "  $0 save-ol <dest-folder> <basename>" >&2
