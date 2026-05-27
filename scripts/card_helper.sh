@@ -4,6 +4,13 @@
 # 由 Claude Code 在 SV_名片自動化製作 SOP 中呼叫
 #
 # 用法：
+#   card_helper.sh check-firstrun
+#       印 "run-step0" (SV_OUTPUT_CONFIRMED != 1) 或 "skip-step0"
+#
+#   card_helper.sh confirm-firstrun <output-path>
+#       首次製作確認：mkdir + open Finder + 寫 env (SV_OUTPUT_CONFIRMED=1)
+#       <output-path> 可帶 ~ 或絕對路徑
+#
 #   card_helper.sh init <chinese-full-name> <english-name>
 #       建資料夾 + 複製模板 + 開 Illustrator + 輪詢直到 doc 就緒
 #
@@ -15,7 +22,7 @@
 #       從 /tmp 搬 output_ol.ai 到 <dest-folder>/OL-<basename>.ai
 #
 # basename 格式範例：20260527-王小明_Ming Wang
-# dest-folder 格式範例：/Users/owner/Documents/02_街聲/6 名片/SV/王小明_Ming Wang
+# dest-folder 格式範例：~/Documents/SV-名片/王小明_Ming Wang
 
 set -e
 
@@ -37,6 +44,40 @@ cmd="$1"
 shift || true
 
 case "$cmd" in
+    check-firstrun)
+        # 印 "run-step0" 代表需走首次確認流程；"skip-step0" 代表跳過
+        if [ "$SV_OUTPUT_CONFIRMED" = "1" ]; then
+            echo "skip-step0"
+        else
+            echo "run-step0"
+        fi
+        ;;
+
+    confirm-firstrun)
+        out="$1"
+        if [ -z "$out" ]; then
+            echo "ERROR: confirm-firstrun 需要 <output-path>" >&2
+            exit 1
+        fi
+        # 處理 ~ 展開（避免 eval 注入）
+        case "$out" in
+            "~")    out="$HOME" ;;
+            "~/"*)  out="$HOME/${out#~/}" ;;
+        esac
+        mkdir -p "$out"
+        open "$out"
+        mkdir -p "$HOME/.config/sv-card"
+        tmp="$HOME/.config/sv-card/env.tmp"
+        cat > "$tmp" <<EOF
+# sv-card 使用者偏好（由首次製作名片流程寫入，可手動編輯）
+SV_OUTPUT_BASE="$out"
+SV_TEMPLATE="$SV_TEMPLATE"
+SV_OUTPUT_CONFIRMED=1
+EOF
+        mv "$tmp" "$HOME/.config/sv-card/env"
+        echo "✅ env 寫入 + Finder 已開啟 $out"
+        ;;
+
     init)
         chinese_full="$1"
         english_name="$2"
@@ -105,6 +146,8 @@ case "$cmd" in
 
     *)
         echo "Usage:" >&2
+        echo "  $0 check-firstrun" >&2
+        echo "  $0 confirm-firstrun <output-path>" >&2
         echo "  $0 init <chinese-full> <english-name>" >&2
         echo "  $0 save-original <dest-folder> <basename>" >&2
         echo "  $0 save-ol <dest-folder> <basename>" >&2

@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-05-27
+
+### Added
+- `card_helper.sh check-firstrun` 子命令：印 `run-step0` 或 `skip-step0`
+- `card_helper.sh confirm-firstrun <path>` 子命令：mkdir + open Finder + 寫 env 為 `SV_OUTPUT_CONFIRMED=1`；支援 `~` 展開（不用 eval，避免注入）
+
+### Changed
+- SKILL.md Step 0 內裸 bash（`. env && echo`、`mkdir + open + cat > env`）全改為呼叫 card_helper.sh 子命令；裸 bash 無法精確 allow，封裝後可走既有 `Bash(card_helper.sh:*)` allow 規則，整套流程不再被 permission prompt 中斷
+
 ## [0.4.0] — 2026-05-27
 
 ### Added
