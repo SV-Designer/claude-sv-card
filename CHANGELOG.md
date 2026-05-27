@@ -6,6 +6,24 @@
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-05-27
+
+### Added
+- `scripts/finalize.jsx`：GATE 後合併收尾（清殘留 + saveAs original + createOutline + saveAs OL CS6），一次跑完取代原本 2 個 mcp__illustrator__run 呼叫
+- `scripts/replace_fields.jsx`：Step 2 欄位替換封裝，吃 `$.global.FIELDS` JSON 替換 7 個 PH_* 欄位 + 自動 save；找不到欄位累積到 missing 一次回報（不中斷）
+- `card_helper.sh finalize <dest> <basename>` 子命令：等同 save-original 後接 save-ol，配合 finalize.jsx 把 GATE 後 4 個 tool call 縮為 2 個
+
+### Changed
+- **SKILL.md GATE 後流程從 4 步驟（Step 7-10）簡化為 2 步驟（Step 7-8）**：mcp 呼叫 finalize.jsx → bash 呼叫 finalize 子命令
+- **SKILL.md Step 2 從 inline ExtendScript 改為 `$.global.FIELDS = {...}; $.evalFile(replace_fields.jsx)`**：避免 JS 字串轉義、模板欄位增減不用改 SKILL.md
+- SOP.md 同步更新 Step 6+7 與 Step 12 的合併說明
+
+### Rationale
+延續 v0.4.x 設計哲學「減少 inline code、減少 tool call、走既有 allow 規則」：
+- 收尾 mcp call 數：4 → 2
+- Step 2 inline JS 字串長度：~400 char → ~250 char（JSON literal 比手寫 find() 函式短）
+- Claude 寫名片時不再需要手寫 ExtendScript 字串（出錯機率降低）
+
 ## [0.4.5] — 2026-05-27
 
 ### Changed

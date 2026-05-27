@@ -24,6 +24,10 @@
 #   card_helper.sh save-ol <dest-folder> <basename>
 #       從 /tmp 搬 output_ol.ai 到 <dest-folder>/OL-<basename>.ai
 #
+#   card_helper.sh finalize <dest-folder> <basename>
+#       GATE 後一次收尾：搬 original + JPG + 搬 OL + 列產出
+#       （等同 save-original 再 save-ol，配合 finalize.jsx 使用）
+#
 # basename 格式範例：20260527-王小明_Ming Wang
 # dest-folder 格式範例：~/Documents/SV-名片/王小明_Ming Wang
 
@@ -155,6 +159,32 @@ EOF
         ls -la "$dest/"
         ;;
 
+    finalize)
+        # GATE 後合併收尾：等同 save-original 後接 save-ol
+        # 配合 finalize.jsx 使用（jsx 已產出 /tmp/output_original.ai + /tmp/output_ol.ai）
+        dest="$1"
+        basename="$2"
+        if [ -z "$dest" ] || [ -z "$basename" ]; then
+            echo "ERROR: finalize 需要 <dest-folder> <basename>" >&2
+            exit 1
+        fi
+
+        # 搬原檔 + 匯 JPG
+        mv /tmp/output_original.ai "$dest/${basename}.ai"
+        cp "$dest/${basename}.ai" /tmp/temp.pdf
+        sips -s format jpeg --resampleHeightWidth 780 2000 -s formatOptions 90 /tmp/temp.pdf --out /tmp/preview.jpg > /dev/null
+        mv /tmp/preview.jpg "$dest/${basename}.jpg"
+        rm /tmp/temp.pdf
+        echo "✅ 原檔 + JPG → $dest/"
+
+        # 搬 OL
+        mv /tmp/output_ol.ai "$dest/OL-${basename}.ai"
+        echo "✅ OL → $dest/OL-${basename}.ai"
+        echo
+        echo "📁 最終產出："
+        ls -la "$dest/"
+        ;;
+
     *)
         echo "Usage:" >&2
         echo "  $0 check-firstrun" >&2
@@ -163,6 +193,7 @@ EOF
         echo "  $0 init <chinese-full> <english-name>" >&2
         echo "  $0 save-original <dest-folder> <basename>" >&2
         echo "  $0 save-ol <dest-folder> <basename>" >&2
+        echo "  $0 finalize <dest-folder> <basename>" >&2
         exit 1
         ;;
 esac

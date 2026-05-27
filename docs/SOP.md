@@ -153,30 +153,30 @@ Claude 用 Read tool 讀 PDF，萃取：
 >
 > 冷啟動實測：Illustrator 啟動 + 載檔 + textFrames 就緒約 1 秒內完成。
 
-### Step 6：Claude 替換 7 個文字欄位（自動）
+### Step 6 + 7：Claude 替換 7 欄位 + 自動存檔（合併呼叫 `replace_fields.jsx`）
 
-Claude 透過 MCP 執行 ExtendScript：
+Claude 透過 MCP 執行：
 
 ```javascript
-var d=app.activeDocument;
-function find(n){for(var i=0;i<d.textFrames.length;i++)if(d.textFrames[i].name===n)return d.textFrames[i];return null;}
-find("PH_NAME_CN_SURNAME").contents="姓";
-find("PH_NAME_CN_GIVEN").contents="名";
-find("PH_NAME_EN").contents="英文名";
-find("PH_TITLE").contents="職稱";
-find("PH_PHONE_OFFICE").contents="+886-2-2741-7065#分機";
-find("PH_PHONE_MOBILE").contents="+886-XXX-XXX-XXX";
-find("PH_EMAIL").contents="email@streetvoice.com";
+$.global.FIELDS = {
+    PH_NAME_CN_SURNAME: "姓",
+    PH_NAME_CN_GIVEN:   "名",
+    PH_NAME_EN:         "英文名",
+    PH_TITLE:           "職稱",
+    PH_PHONE_OFFICE:    "+886-2-2741-7065#分機",
+    PH_PHONE_MOBILE:    "+886-XXX-XXX-XXX",
+    PH_EMAIL:           "email@streetvoice.com"
+};
+$.evalFile(Folder("~").fsName + "/.claude/skills/sv-card/scripts/replace_fields.jsx");
 ```
 
-### Step 7：Claude 自動存檔
+replace_fields.jsx 內部行為：
+1. 建立 `name → TextFrame` 索引（避免每欄位都全表掃）
+2. 對每個 `PH_*` key 找對應 TextFrame，找不到就累積到 missing 列表
+3. 全部處理完才一次回報 missing（不中斷，便於 Claude 一次收集問題）
+4. 完成後自動 `d.save()`
 
-替換完 7 欄位後直接：
-```javascript
-app.activeDocument.save();
-```
-
-> 替換邏輯是確定性的（PH_ 命名找不到會直接 throw error），不需使用者目視。最終 JPG 預覽（Step 13）是最後品管關卡。
+> 為什麼抽成 jsx：避免 SKILL.md 內 inline JS 字串轉義問題，模板欄位增減也不用改 SKILL.md。替換邏輯是確定性的，不需使用者目視，JPG 預覽（Step 12）才是最後品管關卡。
 
 ### Step 8 + 9 + 10a：合併呼叫 `make_card_artifacts.py`
 
@@ -238,55 +238,36 @@ app.activeDocument.save();
 
 > 💡 這是整個流程**唯一**的 gate。Step 5–11 都自動串接無詢問。設計理由：QR 置入完成後是視覺最終狀態，這時候請使用者一次性確認最划算。
 
-### Step 12：Claude 輸出 3 個檔案到新資料夾
+### Step 12：Claude 輸出 5 個檔案到新資料夾（合併呼叫 `finalize.jsx` + `card_helper.sh finalize`）
 
 輸出資料夾：`$SV_OUTPUT_BASE/{NAME_FOLDER}/`（預設 `~/Documents/SV-名片/`）
 
-**12a. 清除殘留物**（重要！）：
+**12a. 一次跑完 Illustrator 端**（清殘留 + 存 original + 外框化 + 存 OL）：
+
 ```javascript
-var top = d.layers[0].pageItems;
-var toRemove = [];
-for (var i = 0; i < top.length; i++) {
-    var it = top[i];
-    if (Math.abs(it.position[0])>1000 || Math.abs(it.position[1])>1000
-        || it.width>1000 || it.height>1000) toRemove.push(it);
-}
-for (var j = 0; j < toRemove.length; j++) toRemove[j].remove();
+$.evalFile(Folder("~").fsName + "/.claude/skills/sv-card/scripts/finalize.jsx");
 ```
 
-**12b. 存原檔到 /tmp + 搬到資料夾 + 匯 JPG**：
+finalize.jsx 內部行為：
+1. 清除位置或尺寸 > 1000 的殘留物（SVG 匯入副作用，見已知問題 4）
+2. saveAs `/tmp/output_original.ai`（中文路徑會 8700，先存 /tmp）
+3. createOutline 全部 textFrames
+4. saveAs `/tmp/output_ol.ai`（CS6 相容）
 
-ExtendScript saveAs 到 /tmp（中文路徑會 8700）：
-```javascript
-var opts = new IllustratorSaveOptions();
-opts.pdfCompatible = true; opts.compressed = true;
-d.saveAs(new File("/tmp/output_original.ai"), opts);
-```
+**12b. 一次搬完檔 + JPG + 列產出**：
 
-Bash 一行搞定 mv + 匯 JPG：
 ```bash
-~/.claude/skills/sv-card/scripts/card_helper.sh save-original \
-    "$DEST_DIR" "$BASENAME"
+~/.claude/skills/sv-card/scripts/card_helper.sh finalize "$DEST_DIR" "$BASENAME"
 ```
 > `$DEST_DIR` 和 `$BASENAME` 是 Step 3 init 印出的；BASENAME 例：`20260527-王小明_Ming Wang`
-> 腳本內部：mv /tmp/output_original.ai → `$DEST_DIR/$BASENAME.ai`，再用 sips 從同檔產 2000×780 JPG
+>
+> finalize 子命令內部：
+> 1. mv `/tmp/output_original.ai` → `$DEST_DIR/$BASENAME.ai`
+> 2. sips 從原檔產 2000×780 JPG → `$DEST_DIR/$BASENAME.jpg`
+> 3. mv `/tmp/output_ol.ai` → `$DEST_DIR/OL-$BASENAME.ai`
+> 4. `ls -la` 列出 5 個交付檔
 
-**12c. 外框化 + 存 OL CS6 + 搬到資料夾**：
-
-ExtendScript createOutline + saveAs 到 /tmp：
-```javascript
-for (var i = d.textFrames.length-1; i >= 0; i--) d.textFrames[i].createOutline();
-var opts = new IllustratorSaveOptions();
-opts.pdfCompatible = true; opts.compressed = true;
-opts.compatibility = Compatibility.ILLUSTRATOR16; // CS6
-d.saveAs(new File("/tmp/output_ol.ai"), opts);
-```
-
-Bash 搬 OL：
-```bash
-~/.claude/skills/sv-card/scripts/card_helper.sh save-ol \
-    "$DEST_DIR" "$BASENAME"
-```
+> 為什麼合併：原本 GATE 後是 4 個 tool call 交替（mcp→bash→mcp→bash），合併後變 2 個（mcp→bash），且 Claude 不用記中間步驟順序。
 
 ---
 
@@ -353,8 +334,10 @@ Bash 搬 OL：
 | vCard 產生器 | `~/.claude/skills/sv-card/scripts/make_vcard.py` |
 | **QR Code 產生器**（取代 qrcode-monkey）| `~/.claude/skills/sv-card/scripts/make_qr.py` |
 | **Artifacts 合併腳本**（Step 8+9+10a，CLI 介面）| `~/.claude/skills/sv-card/scripts/make_card_artifacts.py` |
-| **Bash 操作合集**（Step 3+4+5 init / Step 12 save）| `~/.claude/skills/sv-card/scripts/card_helper.sh` |
+| **Bash 操作合集**（init / save / finalize）| `~/.claude/skills/sv-card/scripts/card_helper.sh` |
+| **欄位替換 jsx**（Step 6+7 合併）| `~/.claude/skills/sv-card/scripts/replace_fields.jsx` |
 | **QR 置入 + 染色 jsx**（Step 10 主邏輯）| `~/.claude/skills/sv-card/scripts/place_qr.jsx` |
+| **GATE 後合併收尾 jsx**（Step 12a）| `~/.claude/skills/sv-card/scripts/finalize.jsx` |
 | 名片替換 jsx（舊版，已被 PH_ 命名替代）| `~/.claude/skills/sv-card/scripts/make_card.jsx` |
 | Illustrator MCP server | 由使用者另行安裝（fork: spencerhhubert/illustrator-mcp-server，需去掉 Claude activate、加長 timeout）|
 | 使用者偏好設定 | `~/.config/sv-card/env`（install.sh 寫入；可覆寫 SV_OUTPUT_BASE、SV_TEMPLATE）|
