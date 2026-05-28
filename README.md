@@ -48,7 +48,7 @@ Claude 會自動：
 | 想換名片存放路徑 | 編輯 `~/.config/sv-card/env`，改 `SV_OUTPUT_BASE="你的新路徑"` |
 | 想找以前做過的名片 | 都在 `~/Documents/SV-名片/`（或你自己設的路徑）內，依中文姓名分資料夾 |
 
-如果 Claude 沒辦法處理，截圖傳給產品工程部。
+如 Claude 無法正常運作，請截圖 slack 洽產品工程部。
 
 ---
 
