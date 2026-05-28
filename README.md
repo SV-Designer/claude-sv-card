@@ -1,6 +1,7 @@
 # sv-card
 
 StreetVoice 街聲名片自動化製作。
+
 觸發「做SV名片、幫我做名片、做名片...」+ 提供簽呈 PDF > 自動產出 5 個交付檔（.ai 原檔 / OL CS6 / JPG 預覽 2000×780 / vCard / QR SVG），並把 vCard 自動上傳 server。
 
 ---
