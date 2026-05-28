@@ -315,9 +315,15 @@ APPLESCRIPT
             fi
             echo "📋 公開 URL：http://${host}${remote_dir}/${vcf_basename}"
         else
-            echo "❌ 上傳失敗（curl exit $?）" >&2
-            echo "  → 若密碼錯誤，請執行：security delete-internet-password -s \"${host}\" -a \"${user}\" -l \"${kc_label}\"" >&2
-            echo "  → 然後重跑 upload-vcard 會再次 prompt 密碼" >&2
+            curl_exit=$?
+            if [ "$existed_before" = "1" ]; then
+                echo "❌ 目前您的 Server 權限無法覆蓋原檔，請洽資訊部同仁。" >&2
+                echo "  → 對應檔案：${vcf_basename}（server 上已存在但 owner 非當前帳號 ${user}）" >&2
+            else
+                echo "❌ 上傳失敗（curl exit ${curl_exit}）" >&2
+                echo "  → 若密碼錯誤，請執行：security delete-internet-password -s \"${host}\" -a \"${user}\" -l \"${kc_label}\"" >&2
+                echo "  → 然後重跑 upload-vcard 會再次 prompt 密碼" >&2
+            fi
             exit 1
         fi
         ;;

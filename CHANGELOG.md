@@ -6,6 +6,21 @@
 
 ## [Unreleased]
 
+## [0.7.1] — 2026-05-28
+
+### Changed
+- `upload-vcard` 對「server 已有同名檔但 owner 非當前 user」的 FTP 550 失敗印明確訊息：
+  ```
+  ❌ 目前您的 Server 權限無法覆蓋原檔，請洽資訊部同仁。
+     → 對應檔案：XxxYyy.vcf（server 上已存在但 owner 非當前帳號 {user}）
+  ```
+  原本的籠統 `curl exit 25` 訊息只在「`existed_before=0`（純密碼錯/網路問題）」時保留
+- SKILL.md「執行流程」段開頭加 dock 跳動提示：Step 2 / 4 / 7 跑 `$.evalFile(.../jsx)` mcp call 後，Claude 須在訊息內提示使用者「請點一下 Illustrator 以便繼續」
+
+### Rationale
+- FTP 550 在「製作者非 vcf owner」這個 use case 很常見（專人替別人重做名片）— 明確訊息直接指向解決路徑（洽資訊部開權限），避免使用者誤以為是密碼錯
+- BridgeTalk.bringToFront 不強制搶焦點是刻意設計（不打斷使用者手邊的事），但 macOS 對背景 GUI app 的 throttle 仍存在 — 需使用者點 dock 才解除。文字提示讓使用者知道為什麼卡住
+
 ## [0.7.0] — 2026-05-28
 
 ### Added
