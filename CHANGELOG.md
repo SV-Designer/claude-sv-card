@@ -6,6 +6,9 @@
 
 ## [Unreleased]
 
+### Changed
+- SKILL.md Step 9 同步 v0.7.2 內部流程：列出 preflight 登入檢查流程、4 種可能結果訊息（成功 / 登入失敗 / 檔案無編輯權限 / 目錄寫權限不足）讓 Claude 能正確轉達
+
 ## [0.7.2] — 2026-05-28
 
 ### Added

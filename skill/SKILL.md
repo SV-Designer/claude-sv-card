@@ -141,15 +141,23 @@ $.evalFile(Folder("~").fsName + "/.claude/skills/sv-card/scripts/finalize.jsx");
 ```bash
 ~/.claude/skills/sv-card/scripts/card_helper.sh upload-vcard "$DEST_DIR/<無空格英文名>.vcf"
 ```
-> 透過 curl + FTP 上傳到 Transmit favorite「Streetvoice」對應 server。
+> 透過 curl + FTP 上傳到 Transmit favorite「Streetvoice」對應 server（首次 / 已使用過走同一條流程，UX 一致）。
 >
-> 首次跑：跳 dialog 要密碼 → 存 macOS Keychain（之後永久靜默）。
+> **內部流程（v0.7.2+）**：
+> 1. 取得密碼：Keychain 有就用；沒有 → 跳 dialog 要密碼 → 存 Keychain
+> 2. **preflight 登入檢查**：`curl --list-only` 對 `/vcard/` 做 noop test
+>    - 通過 → 印 `✅ 登入 ${host} 成功` → 進入上傳
+>    - 失敗 → 自動刪 Keychain 密碼 + 跳 dialog 重輸 → 再 preflight 一次
+>    - 仍失敗 → 印「請洽產品工程部」+ exit 1
+> 3. 上傳：FTP STOR（預設覆蓋同名檔）
 >
-> 子命令會印兩種訊息擇一：
-> - `✅ vCard 已上傳 server`（新檔）
-> - `✅ vCard 已上傳 server 並覆蓋舊檔`（重做名片時 FTP STOR 自動 overwrite）
+> **可能印出的結果訊息**（Claude 收尾要轉達給使用者）：
+> - ✅ 成功路徑：`✅ vCard 已上傳 server` 或 `✅ vCard 已上傳 server 並覆蓋舊檔` + 公開 URL
+> - ❌ 登入失敗：`❌ 登入仍失敗 ... 請洽產品工程部協助確認帳號權限`
+> - ❌ 檔案無編輯權限：`❌ 該檔案未開放編輯權限 ... 請洽產品工程部協助開放該檔案的編輯權限`
+> - ❌ 新檔上傳失敗：`❌ 上傳失敗 ... 登入已驗證 OK 故非密碼問題 ... 請洽產品工程部確認 /vcard/ 目錄寫權限`
 >
-> Claude 收尾時請把這行訊息 + 公開 URL 一併報告給使用者。
+> 失敗訊息已切開「登入問題」vs「檔案/目錄權限問題」兩個獨立類別，不會混淆密碼錯與權限問題。
 
 ## 📂 最終產出
 
