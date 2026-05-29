@@ -23,9 +23,9 @@
 - SKILL.md / SOP.md Step 9 / 13 同步加入 9d 驗證流程描述
 
 ### 設計動機
-- 實測 #554 FuHuang.vcf：v0.8.1 STOR 顯示 `226 Transfer complete`（curl exit 0 = 視為成功）但事後 verify 發現 server 端是「曹家寧 Apple 通訊錄匯出 30 KB 版」，不是我們上傳的「sv-card 簡版 476 bytes」。
-- 推測：STOR 成功後，真實 vcf owner / 某 process 把 server 端覆蓋回原版。`9c ✅` 訊息會給使用者 false positive 信心。
-- 加 9d cmp 驗證才能確認 server 端真的是 sv-card 上傳的內容。
+- **預防性安全網**：FTP STOR 回 `226 Transfer complete` 只代表「傳輸完成」，**不代表「server 端最終內容 = 你上傳的內容」**。可能情境：他人同時用 Transmit 上傳同名檔覆蓋你、server 端有 sync process 把 vcf revert 回原版等
+- `9c ✅ 已上傳` 訊息對這類情境會 false positive；唯有 9d cmp 二進位比對才能確認 server 端真的是 sv-card 上傳的內容
+- **後記**：實測 #554 FuHuang.vcf 跑 verify 印 mismatch（server 30 KB Apple 通訊錄版 vs 本地 476 bytes sv-card 版）— 但事後確認那是使用者另外用 Transmit 手動覆蓋，**不是真實 race condition**。該 case 仍有效證明 verify-vcard 邏輯運作正確；多人協作的真實 race 仍是 9d 預防的目標情境
 
 ## [0.8.2] — 2026-05-29
 
