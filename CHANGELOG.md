@@ -6,6 +6,30 @@
 
 ## [Unreleased]
 
+## [0.8.6] — 2026-06-03
+
+### Added
+- **`scripts/extract_signoff_fields.py`**：簽呈 PDF 機械萃取 18 個欄位（表單號、申請人、中文姓名拆分、英文名 alias 偵測、職稱、Email、分機、手機、版型、地區、其他需求、表單註釋等），印 JSON 到 stdout
+- **`card_helper.sh extract-pdf <pdf-path>` 子命令**：包裝上述 Python 腳本
+- **SKILL.md / SOP.md「PDF 萃取規則」章節重寫**：從「Claude 自己照表抽」改為「Claude Read PDF + 腳本萃取 JSON」雙重檢核，比對不一致 / Claude 看出 typo / 特殊備註 → 停下與使用者確認
+
+### 設計動機
+- **背景**：當天製作 #661 名片時實測抓到 PDF 上英文名是 typo「Strong Wo」（應為 `Wu`），Claude 視覺判斷後停下確認 — 證明人類視覺校驗有不可取代的價值
+- **為何雙重檢核而非純腳本**：
+  - 腳本對 typo 無辨識能力（沒字典 + 中文姓名沒有權威字典可比對）
+  - 腳本對「過去未碰過的特殊請求」只能字面抽取，無法判斷語意
+  - PDF 格式變動時，沒有 Claude 視覺校驗就察覺不到欄位漏抓
+- **為何雙重檢核而非純 Claude**：
+  - 拆中文姓 / 名（複姓判斷）、拆英文 alias（字符類型判斷）容易出錯
+  - 腳本一定回傳 18 欄 JSON，省了 Claude 逐個欄位思考的 token
+- **權衡**：相比純 Claude 多 ~300 tokens（JSON output），但 typo 偵測機率顯著上升（雙重檢核交叉確認）— 對「製作頻率不高」的使用者來說，**降低出錯機率比省 token 更重要**
+
+### Technical Notes
+- **複姓表**：列入 18 個常見複姓（歐陽 / 上官 / 司徒 / 諸葛 / 慕容 / 皇甫 / 司馬 / 東方 / 夏侯 / 南宮 / 令狐 / 宇文 / 長孫 / 軒轅 / 鍾離 / 尉遲 / 鮮于 / 公孫）。罕見複姓會被拆錯字 → Claude 視覺校驗會 catch
+- **alias 偵測**：英文名首 token 含 CJK 字符 → 是 alias。對「阿明 Ming Wang」OK；若有人寫「Ming 阿明 Wang」會抓錯（罕見）
+- **「其他需求」regex 陷阱**：PDF 內第一個「其他需求」字串其實是 Legacy 提示文字（「請將色號填寫於下方的其他需求欄中」），用 greedy `.*` 吃光前文避開
+- **PDF 全形字回正**：pdfplumber 抽出的 `⽚` `⼈` `⼿` 等全形字符回正為 `片 / 人 / 手`，方便 regex 比對
+
 ## [0.8.5] — 2026-06-03
 
 ### Added

@@ -49,6 +49,12 @@
 #       用 pypdf 改 mediabox/cropbox 隱藏「表單註釋」section 以下（含簽核列表）。
 #       依賴 pypdf + pdfplumber（pip3 install --user pypdf pdfplumber）。
 #
+#   card_helper.sh extract-pdf <pdf-path>
+#       從簽呈 PDF 機械萃取所有欄位，印 JSON 到 stdout。
+#       設計給「Claude Read PDF + 腳本萃取」雙重檢核流程使用，
+#       Claude 比對兩邊不一致 → 停下與使用者確認。
+#       依賴 pdfplumber。
+#
 # basename 格式範例：20260527-王小明_Ming Wang
 # dest-folder 格式範例：~/Documents/SV-名片/王小明_Ming Wang
 # sidecar 路徑：/tmp/sv_card_fields.json
@@ -532,6 +538,17 @@ APPLESCRIPT
         exec python3 "$SV_CARD_SKILL_DIR/scripts/backup_signoff_pdf.py" "$pdf" "$dest"
         ;;
 
+    extract-pdf)
+        # 從簽呈 PDF 機械萃取所有欄位，印 JSON 到 stdout
+        # 配合 Claude Read PDF 雙重檢核：腳本抓欄位、Claude 看視覺校 typo / 特殊備註
+        pdf="$1"
+        if [ -z "$pdf" ]; then
+            echo "ERROR: extract-pdf 需要 <pdf-path>" >&2
+            exit 1
+        fi
+        exec python3 "$SV_CARD_SKILL_DIR/scripts/extract_signoff_fields.py" "$pdf"
+        ;;
+
     *)
         echo "Usage:" >&2
         echo "  $0 check-firstrun" >&2
@@ -540,6 +557,7 @@ APPLESCRIPT
         echo "              --title ... --email ... [--mobile ...] [--office-ext ...]" >&2
         echo "  $0 artifacts [args...]" >&2
         echo "  $0 backup-pdf <pdf-path> <dest-dir>" >&2
+        echo "  $0 extract-pdf <pdf-path>" >&2
         echo "  $0 save-original <dest-folder> <basename>" >&2
         echo "  $0 save-ol <dest-folder> <basename>" >&2
         echo "  $0 finalize <dest-folder> <basename>" >&2
