@@ -16,6 +16,7 @@ JSON 欄位：
 import sys
 import re
 import json
+import unicodedata
 import pdfplumber
 
 # 常見複姓（兩字）— 涵蓋台灣常見即可，其餘 fallback 取單字
@@ -52,8 +53,10 @@ def split_english_name(en_full):
 
 
 def normalize_placeholder(s):
-    """把 PDF 內常見的全形/異體字回正，方便比對 placeholder"""
-    return s.replace("⽂", "文").replace("⽚", "片").replace("⼈", "人").replace("⼿", "手").replace("⼯", "工")
+    """把 PDF 抽出的 CJK Compatibility Ideographs / Radicals 全部回正
+    （v0.8.6 用手列 5 字會漏掉 ⾯ ⾏ ⽯ 等，v0.8.7 改用 NFKC 統一處理）
+    """
+    return unicodedata.normalize("NFKC", s)
 
 
 def extract_fields(pdf_path):
@@ -96,8 +99,9 @@ def extract_fields(pdf_path):
     m = re.search(r"名片上的郵件地址\s+(\S+@\S+)", text)
     out["email"] = m.group(1).strip() if m else None
 
-    # 分機 + 手機（同一行兩欄；分機可能空白）
-    m = re.search(r"名片上的室內分機\s+(.*?)名片上的個人手機號碼\s*(\S*)", text)
+    # 分機 + 手機（同一行兩欄；分機 / 手機都可能空白）
+    # 注意：手機後用 [ \t]* 限制不跨行，避免空白時誤抓下一行的「名片版型」字串（v0.8.7 fix）
+    m = re.search(r"名片上的室內分機\s+(.*?)名片上的個人手機號碼[ \t]*(\S*)", text)
     if m:
         ext_raw = m.group(1).strip()
         out["office_ext"] = ext_raw if ext_raw else None

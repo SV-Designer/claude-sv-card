@@ -6,6 +6,24 @@
 
 ## [Unreleased]
 
+## [0.8.7] — 2026-06-04
+
+### Fixed
+- **`extract_signoff_fields.py` Bug A：全形 CJK 相容字符未回正**
+  - v0.8.6 `normalize_placeholder()` 手列 5 字（⽚⼈⼿⼯⽂），漏掉 ⾯ ⾏ ⽯ 等大量同類字符
+  - 實測 #498（林小芳）`title="平⾯設計"`、#554（黃阿福）`applicant_dept="執⾏董事辦公室"` / `surname_cn="⽯"` 都抓出怪字
+  - 改用 `unicodedata.normalize("NFKC", text)` 統一處理 — Unicode 標準算法，涵蓋全部 CJK Compatibility Ideographs / Radicals 範圍
+- **`extract_signoff_fields.py` Bug B：手機空白時 regex 抓到下一行**
+  - 原 regex `名片上的個人手機號碼\s*(\S*)` 的 `\s*` 包含 `\n`，手機欄位空白時會跨行 match 下一行的「名片版型」字串
+  - 實測 #498 抓出 `mobile="名片版型"`（應為 null）
+  - 改為 `[ \t]*`（只允許空白/tab，禁止跨行）
+
+### 設計動機
+- 兩個 bug 都是 v0.8.6 開發時只用 #661 一個 PDF 測試，沒覆蓋到「全形字符 / 手機空白」變體
+- 使用者測試時拿 #498 + #554 兩張新 PDF 跑 extract-pdf，**雙重檢核流程本身有效**（Claude 在 JSON 看到 `title="平⾯設計"` 跟 PDF 視覺「平面設計」不一致就 catch）— 但腳本可靠性還能更好
+- **Bug A 的選擇**：手列字符表（局部、可解釋）vs NFKC（全面、Unicode 標準）。選 NFKC 因為今天遇到的字符不會是最後一批，全面解掉一勞永逸
+- **Bug B 的選擇**：拆兩個 regex 各自抓分機/手機 line vs 修飾現有複合 regex。選後者改動最小，但風險是同類 cross-line 問題未來可能在其他欄位重現 — 列入未來注意項
+
 ## [0.8.6] — 2026-06-03
 
 ### Added
