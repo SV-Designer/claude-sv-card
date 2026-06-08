@@ -6,6 +6,37 @@
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-06-08
+
+### Added
+- **公司固定資訊抽離至設定檔（P1）**：新增 `scripts/company_config.py` 載入器與 `~/.config/sv-card/company.json` 預設檔
+  - 涵蓋欄位：公司中文/英文名、統編、公司電話（office + vCard 兩種格式）、FAX、地址（街/區/市/郵遞/國）、vCard URL prefix、PRODID、website
+  - 設計：fallback DEFAULTS + 深層字典合併。缺檔 / 缺欄位 / JSON 解析失敗都不中斷，自動補預設值（向後相容，現行使用者無感）
+  - 環境變數覆寫路徑：`SV_COMPANY_CONFIG`（預設 `~/.config/sv-card/company.json`）
+  - CLI debug：`python3 scripts/company_config.py` 印出生效設定值
+
+### Changed
+- **`make_vcard.py`、`make_card_artifacts.py`、`card_helper.sh`** 三處硬編碼公司值改為從 `company_config` 讀取
+  - `make_vcard.py`：ORG / PRODID / TEL VOICE / TEL FAX / ADR / URL 6 個欄位 + `VCARD_URL_BASE` 常數
+  - `make_card_artifacts.py`：QR Code 編碼的 vCard URL prefix
+  - `card_helper.sh`：sidecar 寫入時的 `PH_PHONE_OFFICE` prefix（傳 `SV_CARD_SCRIPT_DIR` 讓 Python heredoc 找到 module）
+
+### 設計動機
+- 依 `feedback_sv_card_decisions` 原則 2（優化優先降出錯）：公司搬家 / 統編變更 / 電話 FAX 變更時，現行需散改 3 個檔案，容易漏改一處導致 vCard / 名片電話不一致。抽離至單一 JSON 後，改一處即可
+- 為什麼選 JSON 而非 YAML：Python 3.9 無 `tomllib`、`pyyaml` 需新依賴（install.sh 要新增檢查）；現有 scripts 全用 stdlib `json`，零新依賴
+- 為什麼保留 DEFAULTS fallback：現有使用者首次跑 v0.9.0 時 `~/.config/sv-card/company.json` 不存在，要保持零摩擦；DEFAULTS 即現行 hardcoded 值
+- 為什麼不一併動模板 .ai：模板內的固定欄位是 rasterized text + 視覺排版，動態注入會破壞美術設計師的版面控制。模板維持手動編輯，但 README 已標註「同時改」
+
+### 回歸測試
+- vCard 輸出 byte-level diff = 空（baseline 用 `git show HEAD:scripts/make_vcard.py` 抽取舊版跑）
+- sidecar `PH_PHONE_OFFICE`：含分機版 `+886-2-2741-7065#393`、無分機版 `+886-2-2741-7065`，兩者皆正確
+- vCard URL prefix：`http://drive.streetvoice.com/vcard/{vcf_name}` 正確
+- Config 編輯即時生效：改 `~/.config/sv-card/company.json` 後新 process 立刻讀到新值
+
+### 待手動處理（不在 P1 範圍，未來新版迭代時須同步）
+- 模板 `templates/20260522-王小明.ai` / `20260529-王小明_無手機版.ai` 仍含硬編公司中文名 / 地址 / 統編等文字
+- 文件 `docs/SOP.md` Step 12「固定欄位」清單仍列字面值（已加註腳指向 company.json）
+
 ## [0.8.9] — 2026-06-08
 
 ### Changed

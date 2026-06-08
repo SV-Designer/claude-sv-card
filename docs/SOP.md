@@ -460,8 +460,7 @@ finalize.jsx 內部行為：
 
 ### P1 — 文件債
 
-- [ ] **固定欄位設定檔化**
-      公司名 / 統編 / 地址 / FAX / 公司電話散落於 `make_vcard.py` 與模板 .ai。抽到 `~/.config/sv-card/company.yaml`，公司搬家或統編變更時免改 code、降低踩漏改一處的出錯機率。
+- [x] ~~固定欄位設定檔化~~（v0.9.0 完成）— 抽至 `~/.config/sv-card/company.json` + `scripts/company_config.py` 載入器
 
 ### P2 — 需求驅動（等實際 PDF 進來再做）
 
@@ -480,6 +479,7 @@ finalize.jsx 內部行為：
 - ✅ 無手機號碼版（v0.8.0，自動切 `20260529-王小明_無手機版.ai`）
 - ✅ `install.sh` 同步檢查 `pypdf` / `pdfplumber`（v0.8.8）
 - ✅ `extract_signoff_fields.py` 全面 regex 收緊（v0.8.9，8 條 `\s` → `[ \t]`，#554 回歸測試 diff 為空）
+- ✅ 公司固定資訊抽離至 `~/.config/sv-card/company.json`（v0.9.0，`company_config.py` 載入器 + fallback DEFAULTS，3 處 hardcoded 改 1 處設定）
 
 ---
 

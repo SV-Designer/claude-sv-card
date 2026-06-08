@@ -11,7 +11,11 @@ StreetVoice 名片 vCard 產生器
     - 套上個人化資料產生新 .vcf
 """
 import os
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from company_config import load as load_company_config
 
 # === 樣板 vCard：含公司 logo PHOTO 區塊（僅在 include_photo=True 時讀取）===
 # 預設 None 代表不嵌 PHOTO（macOS 通訊錄會自動依姓氏產字母頭貼，這是建議行為）。
@@ -52,24 +56,30 @@ def build_vcard(data: dict, photo_block: str = "") -> str:
     # mobile 可選：簽呈沒填手機時為空字串 / None，跳過 TEL CELL 整行
     mobile = data.get("mobile") or ""
 
+    cfg = load_company_config()
+    co = cfg["company"]
+    ph = cfg["phone"]
+    addr = cfg["address"]
+    vc = cfg["vcard"]
+
     lines = [
         "BEGIN:VCARD",
         "VERSION:3.0",
-        "PRODID:-//StreetVoice CardGen//EN",
+        f"PRODID:{vc['product_id']}",
         f"N:{cn_surname};{cn_given};;;",
         f"FN:{cn_given} {cn_surname}",
         f"NICKNAME:{en_name}",
-        "ORG:街聲股份有限公司 (StreetVoice);",
+        f"ORG:{co['name_cn']} ({co['name_en']});",
         f"TITLE:{title}",
         f"EMAIL;type=INTERNET;type=pref:{email}",
-        "TEL;type=WORK;type=VOICE;type=pref:02-27417065",
-        "TEL;type=WORK;type=FAX:02-27488490",
+        f"TEL;type=WORK;type=VOICE;type=pref:{ph['office_vcard_format']}",
+        f"TEL;type=WORK;type=FAX:{ph['fax_vcard_format']}",
     ]
     if mobile:
         lines.append(f"TEL;type=CELL;type=VOICE:{mobile}")
     lines.extend([
-        "ADR;type=WORK;type=pref:;;松山區光復北路 11 巷 35 號 11 樓;松山區;台北市;105;台灣",
-        "URL;type=WORK;type=pref:www.streetvoice.com",
+        f"ADR;type=WORK;type=pref:;;{addr['street']};{addr['district']};{addr['city']};{addr['postal']};{addr['country']}",
+        f"URL;type=WORK;type=pref:{cfg['website']}",
     ])
     if photo_block:
         lines.append(photo_block)
@@ -78,8 +88,14 @@ def build_vcard(data: dict, photo_block: str = "") -> str:
     return "\r\n".join(lines)
 
 
-# 公司 vCard 公開存放網址前綴（上傳後可從此 URL 取得檔案）
-VCARD_URL_BASE = "http://drive.streetvoice.com/vcard/"
+def _vcard_url_base() -> str:
+    """從 company config 讀 vCard 公開 URL prefix（lazy 讀，支援 runtime 換 config）。"""
+    return load_company_config()["vcard"]["url_base"]
+
+
+# 向後相容：保留模組層級常數，但改用 property-like 函式呼叫
+# 既有 callers 直接讀 VCARD_URL_BASE 會拿到模組載入時的值（DEFAULTS）
+VCARD_URL_BASE = _vcard_url_base()
 
 
 def make_vcard(data: dict, output_path: Path, include_photo: bool = False):
@@ -98,7 +114,7 @@ def make_vcard(data: dict, output_path: Path, include_photo: bool = False):
     content = build_vcard(data, photo_block)
     output_path.write_text(content, encoding="utf-8")
     print(f"OK: 寫入 {output_path} ({output_path.stat().st_size} bytes)")
-    public_url = VCARD_URL_BASE + output_path.name
+    public_url = _vcard_url_base() + output_path.name
     print(f"📋 vCard 上傳後 URL:  {public_url}")
 
 

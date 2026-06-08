@@ -201,15 +201,19 @@ EOF
         SURNAME="$surname" GIVEN="$given" EN="$english_name" \
         TITLE="$title" EMAIL="$email" MOBILE="$mobile" \
         OFFICE_EXT="$office_ext" DEST_DIR="$dest_dir" \
+        SV_CARD_SCRIPT_DIR="$SV_CARD_SKILL_DIR/scripts" \
         python3 - <<'PYEOF' > "$SV_SIDECAR"
-import json, os
+import json, os, sys
+sys.path.insert(0, os.environ["SV_CARD_SCRIPT_DIR"])
+from company_config import phone
+
 mobile_vcard = os.environ["MOBILE"]
 office_ext   = os.environ["OFFICE_EXT"]
 en = os.environ["EN"]
 vcf_name = en.replace(" ", "") + ".vcf"
 
-# PH_PHONE_OFFICE：有 ext 加 #，沒 ext 純號碼
-ph_phone_office = "+886-2-2741-7065"
+# PH_PHONE_OFFICE：有 ext 加 #，沒 ext 純號碼（電話 prefix 從 company_config 讀，v0.9.0+ P1）
+ph_phone_office = phone()["office"]
 if office_ext:
     ph_phone_office += "#" + office_ext
 

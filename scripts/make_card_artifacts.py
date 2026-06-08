@@ -34,6 +34,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from make_vcard import make_vcard
 from make_qr import make_qr
+from company_config import vcard_config
 
 
 def main():
@@ -103,7 +104,7 @@ def main():
 
     # 2. QR Code SVG
     qr_path = folder / "QR Code.svg"
-    qr_url = f"http://drive.streetvoice.com/vcard/{vcf_name}"
+    qr_url = f"{vcard_config()['url_base']}{vcf_name}"
     make_qr(qr_url, qr_path)
 
     # 3. 預處理 SVG（剝 id="bg" 背景白底）→ /tmp
