@@ -3,7 +3,7 @@
 # sv-card 安裝腳本
 #
 # 行為（全部 idempotent，可重複執行）：
-#   1. 檢查必要依賴（Adobe Illustrator, Python3, qrcode 套件）
+#   1. 檢查必要依賴（Adobe Illustrator, Python3, qrcode / pypdf / pdfplumber 套件）
 #   2. 提示使用者 illustrator-mcp-server 安裝狀態（不自動裝，因需 Claude Code MCP 設定）
 #   3. 建立 ~/.claude/skills/sv-card/ 內的 symlink (SKILL.md/scripts/templates/docs)
 #   4. 互動式問使用者偏好（SV_OUTPUT_BASE 等），寫入 ~/.config/sv-card/env
@@ -60,6 +60,40 @@ if ! python3 -c "import qrcode" 2>/dev/null; then
     fi
 else
     echo "  ✅ Python qrcode 套件已安裝"
+fi
+
+# pypdf 套件（v0.8.5+ backup-pdf 必要）
+if ! python3 -c "import pypdf" 2>/dev/null; then
+    echo "  ⚠️  Python pypdf 套件未安裝（backup-pdf 必要）"
+    if [ "$NON_INTERACTIVE" = "1" ]; then
+        echo "    → 自動執行 pip3 install pypdf"
+        python3 -m pip install --user pypdf
+    else
+        read -p "    → 現在用 pip3 install --user pypdf 安裝？[Y/n] " yn
+        case "$yn" in
+            [Nn]*) echo "    略過。請手動執行：python3 -m pip install --user pypdf" ;;
+            *) python3 -m pip install --user pypdf ;;
+        esac
+    fi
+else
+    echo "  ✅ Python pypdf 套件已安裝"
+fi
+
+# pdfplumber 套件（v0.8.5+ backup-pdf / extract-pdf 必要）
+if ! python3 -c "import pdfplumber" 2>/dev/null; then
+    echo "  ⚠️  Python pdfplumber 套件未安裝（backup-pdf / extract-pdf 必要）"
+    if [ "$NON_INTERACTIVE" = "1" ]; then
+        echo "    → 自動執行 pip3 install pdfplumber"
+        python3 -m pip install --user pdfplumber
+    else
+        read -p "    → 現在用 pip3 install --user pdfplumber 安裝？[Y/n] " yn
+        case "$yn" in
+            [Nn]*) echo "    略過。請手動執行：python3 -m pip install --user pdfplumber" ;;
+            *) python3 -m pip install --user pdfplumber ;;
+        esac
+    fi
+else
+    echo "  ✅ Python pdfplumber 套件已安裝"
 fi
 
 # illustrator-mcp-server 偵測
