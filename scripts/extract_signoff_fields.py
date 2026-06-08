@@ -68,14 +68,14 @@ def extract_fields(pdf_path):
 
     out = {}
 
-    m = re.search(r"表單號\s*[:：]\s*(\d+)", text)
+    m = re.search(r"表單號[ \t]*[:：][ \t]*(\d+)", text)
     out["form_no"] = m.group(1) if m else None
 
-    m = re.search(r"申請人\s*[:：]\s*([^/\s]+)/(\S+?)(?:\s|$)", text)
+    m = re.search(r"申請人[ \t]*[:：][ \t]*([^/\s]+)/(\S+?)(?:\s|$)", text)
     out["applicant_dept"] = m.group(1).strip() if m else None
     out["applicant_name"] = m.group(2).strip() if m else None
 
-    m = re.search(r"名片上的姓名\s+(\S+?)\s+公司", text)
+    m = re.search(r"名片上的姓名[ \t]+(\S+?)[ \t]+公司", text)
     out["card_name_raw"] = m.group(1) if m else None
     if out["card_name_raw"]:
         cn = re.sub(r"\(\d+\)", "", out["card_name_raw"])
@@ -84,7 +84,7 @@ def extract_fields(pdf_path):
     else:
         out["card_name_cn"] = out["surname_cn"] = out["given_cn"] = None
 
-    m = re.search(r"名片上的英文名\s+(.+?)\s+名片上的職稱\s+(.+)", text)
+    m = re.search(r"名片上的英文名[ \t]+(.+?)[ \t]+名片上的職稱[ \t]+(.+)", text)
     if m:
         en_full = m.group(1).strip()
         out["english_name_full"] = en_full
@@ -96,12 +96,13 @@ def extract_fields(pdf_path):
         out["english_name_full"] = out["title"] = None
         out["english_alias"] = out["english_name_no_alias"] = None
 
-    m = re.search(r"名片上的郵件地址\s+(\S+@\S+)", text)
+    m = re.search(r"名片上的郵件地址[ \t]+(\S+@\S+)", text)
     out["email"] = m.group(1).strip() if m else None
 
     # 分機 + 手機（同一行兩欄；分機 / 手機都可能空白）
-    # 注意：手機後用 [ \t]* 限制不跨行，避免空白時誤抓下一行的「名片版型」字串（v0.8.7 fix）
-    m = re.search(r"名片上的室內分機\s+(.*?)名片上的個人手機號碼[ \t]*(\S*)", text)
+    # 全檔通則（v0.8.9）：欄位 label 與內容之間用 [ \t] 不用 \s，避免欄位空白時跨行誤抓
+    # （v0.8.7 先在「手機後」加此保護，v0.8.9 推廣到所有欄位 regex）
+    m = re.search(r"名片上的室內分機[ \t]+(.*?)名片上的個人手機號碼[ \t]*(\S*)", text)
     if m:
         ext_raw = m.group(1).strip()
         out["office_ext"] = ext_raw if ext_raw else None
@@ -110,10 +111,10 @@ def extract_fields(pdf_path):
     else:
         out["office_ext"] = out["mobile"] = None
 
-    m = re.search(r"名片版型\s+(.+?)(?:\n|$)", text)
+    m = re.search(r"名片版型[ \t]+(.+?)(?:\n|$)", text)
     out["template_type"] = m.group(1).strip() if m else None
 
-    m = re.search(r"所屬地區\s+(\S+)", text)
+    m = re.search(r"所屬地區[ \t]+(\S+)", text)
     out["region"] = m.group(1).strip() if m else None
 
     # 其他需求：「其他需求」之後到「所屬地區」之前

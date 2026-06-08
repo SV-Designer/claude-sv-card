@@ -456,17 +456,7 @@ finalize.jsx 內部行為：
 
 ## 🚀 未來優化方向（按優先序）
 
-> 設計原則（依 memory `feedback_sv_card_optimization_roi`）：名片製作頻率不高，token 收益低，**只挑「降低出錯機率」的項目**。整合腳本、API 封裝這類重構性改動 ROI 低，不入此清單。
-
-### P0 — 環境一致性
-
-- [ ] **`install.sh` 同步檢查 `pypdf` / `pdfplumber`**
-      Step 1.5（backup-pdf）與 PDF 萃取（extract-pdf）必需，v0.8.5+ 起遺漏。新機器首裝若沒手動 `pip3 install --user` 就會炸。
-
-### P1 — 強化萃取可靠性
-
-- [ ] **`extract_signoff_fields.py` 全面 regex 審查**
-      v0.8.7 修了「手機 `\s*` 跨行」的 Bug B；同類「`\s*` 包含 `\n` 跨欄位 match」風險可能潛伏在其他複合 regex 中。一次性掃過所有欄位 regex，把「不應跨行」的 `\s*` 收緊為 `[ \t]*`。
+> 設計原則（依 memory `feedback_sv_card_decisions` 原則 2 — 優化優先降出錯）：名片製作頻率不高，token 收益低，**只挑「降低出錯機率」的項目**。整合腳本、API 封裝這類重構性改動 ROI 低，不入此清單。
 
 ### P1 — 文件債
 
@@ -476,7 +466,7 @@ finalize.jsx 內部行為：
 ### P2 — 需求驅動（等實際 PDF 進來再做）
 
 - [ ] **支援其他版型**：中子（北京/上海）、CN、EN、Legacy（含色號）
-      依 memory `feedback_new_card_type_testing`：每出現一張該版型簽呈再逐步擴展，初期所有步驟先停下與使用者確認，**不直接走自動流程**。
+      依 memory `feedback_sv_card_decisions` 原則 1（新款逐步確認）：每出現一張該版型簽呈再逐步擴展，初期所有步驟先停下與使用者確認，**不直接走自動流程**。
 
 ### ❌ 已評估不做（ROI 低）
 
@@ -488,6 +478,8 @@ finalize.jsx 內部行為：
 - ✅ PDF 自動萃取（v0.8.6，`extract_signoff_fields.py` + 雙重檢核流程）
 - ✅ QR Code 生成自動化（`make_qr.py` 取代 qrcode-monkey）
 - ✅ 無手機號碼版（v0.8.0，自動切 `20260529-王小明_無手機版.ai`）
+- ✅ `install.sh` 同步檢查 `pypdf` / `pdfplumber`（v0.8.8）
+- ✅ `extract_signoff_fields.py` 全面 regex 收緊（v0.8.9，8 條 `\s` → `[ \t]`，#554 回歸測試 diff 為空）
 
 ---
 

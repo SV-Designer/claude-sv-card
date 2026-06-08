@@ -6,6 +6,35 @@
 
 ## [Unreleased]
 
+## [0.8.9] — 2026-06-08
+
+### Changed
+- **`extract_signoff_fields.py` 全面 regex 收緊**：將 8 條欄位 regex 中的 `\s` 改為 `[ \t]`，禁止跨行 match
+  - 高風險修正（同 v0.8.7 Bug B 結構）：
+    - 英文名 `名片上的英文名\s+(.+?)\s+名片上的職稱\s+(.+)` → `[ \t]+`：若英文名空白且 PDF 換行排版，`(.+?)` lazy + `\s+` 可能誤抓相鄰欄位
+    - 郵件地址 `名片上的郵件地址\s+(\S+@\S+)` → `[ \t]+`：若 email 空白且頁面有其他 `@` 字串（如 footer），`\s+` 跨行可能誤抓
+  - 一致性修正：表單號 / 申請人 / 名片上的姓名 / 室內分機 / 名片版型 / 所屬地區（6 條 `\s` → `[ \t]`，防未來）
+  - DOTALL 兩條（其他需求 / 表單註釋）故意跨行多行內容，不動
+- **修正 stale memory 參照**：將 `skill/SKILL.md` 與 `docs/SOP.md` 中對 `feedback_new_card_type_testing` 與 `feedback_sv_card_optimization_roi` 的參照，更新為合併後的 `feedback_sv_card_decisions`（原則 1 / 原則 2）
+  - 起因：2026-06-08 全域 memory 重組（plan A）將兩份 feedback 合併為單一 `feedback_sv_card_decisions.md`，repo 內參照變成 dangling reference
+  - 改動只動文字參照，不動行為邏輯
+
+### 設計動機
+- v0.8.7 修了手機欄位的「`\s*` 跨行誤抓」Bug B 後，SOP.md 列入 P1 todo：同類風險可能潛伏其他複合 regex
+- 一次性掃過所有欄位 regex，把「不應跨行」的 `\s` 收緊為 `[ \t]`，全檔語意一致
+- 兩條 DOTALL（其他需求 / 表單註釋）的跨行是預期行為（多行內容），保留
+- **回歸測試**：對 #554（黃阿福 / Fu Huang）簽呈 PDF 跑 `extract-pdf` 比對前後輸出，diff 為空 — 改動無 regression
+
+## [0.8.8] — 2026-06-08
+
+### Added
+- **`install.sh` 補 `pypdf` / `pdfplumber` 套件檢查**：照既有 `qrcode` 同 pattern（互動/非互動兩種模式），新機器首裝可一次裝齊三個 PDF 相關依賴
+
+### 設計動機
+- v0.8.5 加 `backup-pdf`、v0.8.6 加 `extract-pdf` 時引入 `pypdf` + `pdfplumber` 兩個新依賴，但 `install.sh` 一直只檢查 `qrcode`，新機器 fresh install 跑 Step 1.5 / PDF 萃取就會炸 ImportError
+- v0.8.5 CHANGELOG 已自註此為 TODO，SOP.md「未來優化方向」也列為 P0「環境一致性」項目
+- **為何不直接在 `card_helper.sh` 動態裝**：install 階段一次裝齊比執行階段炸了才裝體驗好，且符合既有 idempotent 設計
+
 ## [0.8.7] — 2026-06-04
 
 ### Fixed
