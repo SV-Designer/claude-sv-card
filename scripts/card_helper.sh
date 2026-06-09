@@ -68,10 +68,11 @@ set -e
 SV_CARD_SKILL_DIR="${SV_CARD_SKILL_DIR:-$HOME/.claude/skills/sv-card}"
 SV_TEMPLATE="${SV_TEMPLATE:-$SV_CARD_SKILL_DIR/templates/20260522-王小明.ai}"
 SV_TEMPLATE_NO_MOBILE="${SV_TEMPLATE_NO_MOBILE:-$SV_CARD_SKILL_DIR/templates/20260529-王小明_無手機版.ai}"
+SV_TEMPLATE_ZHONGZI="${SV_TEMPLATE_ZHONGZI:-$SV_CARD_SKILL_DIR/templates/20260609-王小明_中子BVI.ai}"
 SV_OUTPUT_BASE="${SV_OUTPUT_BASE:-$HOME/Documents/SV-名片}"
 SV_SIDECAR="${SV_SIDECAR:-/tmp/sv_card_fields.json}"
 
-# 預設模板（有手機版）必存；無手機版只在 init 真的選到時才檢查
+# 預設模板（TW 有手機版）必存；其餘版型只在 init 真的選到時才檢查
 if [ ! -f "$SV_TEMPLATE" ]; then
     echo "ERROR: 找不到模板 .ai 檔: $SV_TEMPLATE" >&2
     echo "  → 請執行 install.sh，或設定 SV_TEMPLATE 環境變數指向實際路徑" >&2
@@ -97,6 +98,12 @@ case "$cmd" in
             if [ ! -f "$SV_SIDECAR" ]; then
                 echo "ERROR: 找不到 sidecar: $SV_SIDECAR（需先跑 init）" >&2
                 exit 1
+            fi
+            # 中子版跳過 artifacts（無 vCard / QR；v0.10.0+）
+            tt=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1])).get('template_type','tw'))" "$SV_SIDECAR")
+            if [ "$tt" = "zhongzi-bvi" ]; then
+                echo "📋 中子版跳過 artifacts（無 vCard / QR）"
+                exit 0
             fi
             exec python3 "$SV_CARD_SKILL_DIR/scripts/make_card_artifacts.py" --from "$SV_SIDECAR"
         else
@@ -139,21 +146,31 @@ EOF
         email=""
         mobile=""
         office_ext=""
+        template_type="tw"  # tw（預設）/ zhongzi-bvi
         while [ $# -gt 0 ]; do
             case "$1" in
-                --chinese)    chinese_full="$2"; shift 2 ;;
-                --english)    english_name="$2"; shift 2 ;;
-                --surname)    surname="$2"; shift 2 ;;
-                --given)      given="$2"; shift 2 ;;
-                --title)      title="$2"; shift 2 ;;
-                --email)      email="$2"; shift 2 ;;
-                --mobile)     mobile="$2"; shift 2 ;;
-                --office-ext) office_ext="$2"; shift 2 ;;
+                --chinese)       chinese_full="$2"; shift 2 ;;
+                --english)       english_name="$2"; shift 2 ;;
+                --surname)       surname="$2"; shift 2 ;;
+                --given)         given="$2"; shift 2 ;;
+                --title)         title="$2"; shift 2 ;;
+                --email)         email="$2"; shift 2 ;;
+                --mobile)        mobile="$2"; shift 2 ;;
+                --office-ext)    office_ext="$2"; shift 2 ;;
+                --template-type) template_type="$2"; shift 2 ;;
                 *)
                     echo "ERROR: init 不認識的參數: $1" >&2
                     exit 1 ;;
             esac
         done
+
+        # template-type 驗證
+        case "$template_type" in
+            tw|zhongzi-bvi) ;;
+            *)
+                echo "ERROR: --template-type 只接受 'tw' 或 'zhongzi-bvi'，收到: $template_type" >&2
+                exit 1 ;;
+        esac
 
         # 必填檢查（mobile / office-ext 改為選填：空字串 = 簽呈沒填）
         missing=""
@@ -166,13 +183,29 @@ EOF
             echo "ERROR: init 缺少必填參數:$missing" >&2
             echo "用法: init --chinese ... --english ... --surname ... --given ..." >&2
             echo "          --title ... --email ... [--mobile ...] [--office-ext ...]" >&2
+            echo "          [--template-type tw|zhongzi-bvi]" >&2
             echo "  --mobile 空（或不傳）→ 用無手機版模板，vCard 跳過 TEL CELL 行" >&2
             echo "  --office-ext 空（或不傳）→ 公司電話 PH_PHONE_OFFICE 不含 # 分機" >&2
+            echo "  --template-type 預設 'tw'，中子版傳 'zhongzi-bvi'（跳過 vCard / QR）" >&2
             exit 1
         fi
 
-        # 根據是否有手機選模板（影響 PH_QRCODE 等版面位置一致；皆已預先命名）
-        if [ -z "$mobile" ]; then
+        # 選模板（v0.10.0+ 加中子版分支）
+        if [ "$template_type" = "zhongzi-bvi" ]; then
+            template="$SV_TEMPLATE_ZHONGZI"
+            if [ ! -f "$template" ]; then
+                echo "ERROR: 找不到中子版模板: $template" >&2
+                echo "  → 請設定 SV_TEMPLATE_ZHONGZI 環境變數，或執行 install.sh 後重試" >&2
+                exit 1
+            fi
+            echo "📋 使用中子版模板（無 vCard / QR 流程）"
+            # 中子版目前不支援無手機版（依需求驅動原則，等實際需求出現再加）
+            if [ -z "$mobile" ]; then
+                echo "⚠️ 中子版目前僅支援有手機版，但簽呈無手機。" >&2
+                echo "   → 暫以有手機模板繼續，PH_PHONE_MOBILE 會留空字串請手動處理" >&2
+            fi
+        elif [ -z "$mobile" ]; then
+            # TW 無手機版
             template="$SV_TEMPLATE_NO_MOBILE"
             if [ ! -f "$template" ]; then
                 echo "ERROR: 找不到無手機版模板: $template" >&2
@@ -181,6 +214,7 @@ EOF
             fi
             echo "📋 使用無手機版模板（簽呈沒填手機）"
         else
+            # TW 有手機版（預設）
             template="$SV_TEMPLATE"
         fi
 
@@ -201,16 +235,18 @@ EOF
         SURNAME="$surname" GIVEN="$given" EN="$english_name" \
         TITLE="$title" EMAIL="$email" MOBILE="$mobile" \
         OFFICE_EXT="$office_ext" DEST_DIR="$dest_dir" \
+        TEMPLATE_TYPE="$template_type" \
         SV_CARD_SCRIPT_DIR="$SV_CARD_SKILL_DIR/scripts" \
         python3 - <<'PYEOF' > "$SV_SIDECAR"
 import json, os, sys
 sys.path.insert(0, os.environ["SV_CARD_SCRIPT_DIR"])
 from company_config import phone
 
-mobile_vcard = os.environ["MOBILE"]
-office_ext   = os.environ["OFFICE_EXT"]
-en = os.environ["EN"]
-vcf_name = en.replace(" ", "") + ".vcf"
+mobile_vcard   = os.environ["MOBILE"]
+office_ext     = os.environ["OFFICE_EXT"]
+en             = os.environ["EN"]
+template_type  = os.environ["TEMPLATE_TYPE"]
+vcf_name       = en.replace(" ", "") + ".vcf"
 
 # PH_PHONE_OFFICE：有 ext 加 #，沒 ext 純號碼（電話 prefix 從 company_config 讀，v0.9.0+ P1）
 ph_phone_office = phone()["office"]
@@ -235,20 +271,25 @@ def to_card_mobile(s):
 if mobile_vcard:
     fields["PH_PHONE_MOBILE"] = to_card_mobile(mobile_vcard)
 
-artifacts = {
-    "surname":  os.environ["SURNAME"],
-    "given":    os.environ["GIVEN"],
-    "en":       en,
-    "title":    os.environ["TITLE"],
-    "email":    os.environ["EMAIL"],
-    "folder":   os.environ["DEST_DIR"],
-    "vcf_name": vcf_name,
-}
-if mobile_vcard:
-    artifacts["mobile"] = mobile_vcard
+# template_type 標記在 sidecar top level，artifacts 子命令會據此 skip vCard/QR（v0.10.0+ 中子版）
+out = {"fields": fields, "template_type": template_type}
 
-print(json.dumps({"fields": fields, "artifacts": artifacts},
-                 ensure_ascii=False, indent=2))
+if template_type == "tw":
+    # 只 TW 版需要 artifacts 區塊（產 vCard + QR）
+    artifacts = {
+        "surname":  os.environ["SURNAME"],
+        "given":    os.environ["GIVEN"],
+        "en":       en,
+        "title":    os.environ["TITLE"],
+        "email":    os.environ["EMAIL"],
+        "folder":   os.environ["DEST_DIR"],
+        "vcf_name": vcf_name,
+    }
+    if mobile_vcard:
+        artifacts["mobile"] = mobile_vcard
+    out["artifacts"] = artifacts
+
+print(json.dumps(out, ensure_ascii=False, indent=2))
 PYEOF
         echo "✅ sidecar 寫入: $SV_SIDECAR"
 

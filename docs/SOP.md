@@ -62,6 +62,38 @@ Claude 自動依序：
 
 > 💡 在 Step 9 GATE 時：使用者切去 Illustrator 看到的就是「替換 + QR 置入後的最新狀態」（Step 8 已 save 進資料夾）。確認 OK 後再產出最終交付檔。
 
+### 中子 BVI 版分支（v0.10.0+）
+
+`template_type == "中子BVI"` 時改走以下流程（簡化版）：
+
+```
+[你]  ① 給 Claude 簽呈 PDF（版型欄位填「中子BVI」）
+        ↓
+[我]  ② 第一句話：「好準備執行，illustator請確保為關閉狀態」
+        ↓
+[我]  ③ 讀 PDF → 萃取資料
+        ↓
+[我]  ④ 建資料夾 + 複製中子模板（`SV_TEMPLATE_ZHONGZI`）
+        ↓
+[我]  ⑤ 開檔
+        ↓
+[我]  ⑥ 替換 7 欄位 → 自動 save
+        ↓
+[我]  ⑦ ❌ 跳過 artifacts（無 vCard / QR；card_helper.sh artifacts 偵測 template_type 自動 skip）
+        ↓
+[我]  ⑧ ❌ 跳過 place_qr.jsx（範本本身無 QR 區塊）
+        ↓
+[我]  ⑨ 🛑 GATE：問使用者「請確認資訊無誤」
+        ↓
+[你]  ⑩ 目視檢查 → 回覆 OK
+        ↓
+[我]  ⑪ 清殘留 → 重存原檔 → JPG → 外框化 → 存 OL CS6
+        ↓
+[我]  ⑫ ❌ 跳過 upload-vcard（沒產 vCard 不用上傳）
+```
+
+> ⚠️ 初期 8 步流程依 memory `feedback_new_card_type_testing` 規則 **每步都要先停下確認**，不可一路衝到底。成功跑 ≥ 2 次後才討論加入自動化白名單。
+
 ---
 
 ## 📐 規範與慣例
@@ -464,8 +496,10 @@ finalize.jsx 內部行為：
 
 ### P2 — 需求驅動（等實際 PDF 進來再做）
 
-- [ ] **支援其他版型**：中子（北京/上海）、CN、EN、Legacy（含色號）
-      依 memory `feedback_sv_card_decisions` 原則 1（新款逐步確認）：每出現一張該版型簽呈再逐步擴展，初期所有步驟先停下與使用者確認，**不直接走自動流程**。
+- [x] ~~中子 BVI 版~~（v0.10.0 完成）— 模板 `templates/20260609-王小明_中子BVI.ai`，`--template-type zhongzi-bvi` 走簡化分支（跳過 vCard / QR / 上傳，輸出 4 個檔案）。**初期測試階段**：依 `feedback_new_card_type_testing`，每步先停下確認，跑 ≥ 2 次成功後才討論加入自動化。
+- [ ] **中子版 — 無手機版**：目前只做有手機版，等實際無手機簽呈進來再加（同 TW 版做法，另建 `SV_TEMPLATE_ZHONGZI_NO_MOBILE` 變數）
+- [ ] **CN / EN / Legacy（含色號）版**
+      尚無範本，等實際簽呈進來再做。依 memory `feedback_sv_card_decisions` 原則 1 處理。
 
 ### ❌ 已評估不做（ROI 低）
 
@@ -480,6 +514,7 @@ finalize.jsx 內部行為：
 - ✅ `install.sh` 同步檢查 `pypdf` / `pdfplumber`（v0.8.8）
 - ✅ `extract_signoff_fields.py` 全面 regex 收緊（v0.8.9，8 條 `\s` → `[ \t]`，#554 回歸測試 diff 為空）
 - ✅ 公司固定資訊抽離至 `~/.config/sv-card/company.json`（v0.9.0，`company_config.py` 載入器 + fallback DEFAULTS，3 處 hardcoded 改 1 處設定）
+- ✅ 中子 BVI 版分支（v0.10.0，新增 `--template-type zhongzi-bvi`、`SV_TEMPLATE_ZHONGZI` 環境變數、sidecar `template_type` 標記、artifacts/QR/upload 自動 skip）
 
 ---
 

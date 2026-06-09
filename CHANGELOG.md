@@ -6,6 +6,41 @@
 
 ## [Unreleased]
 
+## [0.10.0] — 2026-06-09
+
+### Added
+- **中子 BVI 版分支**：sv-card skill 新增第二種名片版型，依簽呈「名片版型」欄位「中子BVI」觸發
+  - 模板：`templates/20260609-王小明_中子BVI.ai`（PH_* 命名 7 個欄位與 TW 版完全相同，但含 5 行寫死的中國分公司資訊）
+  - `card_helper.sh init` 新增 `--template-type` 參數（值：`tw` / `zhongzi-bvi`，預設 `tw`）
+  - 新環境變數 `SV_TEMPLATE_ZHONGZI`（預設 `$SV_CARD_SKILL_DIR/templates/20260609-王小明_中子BVI.ai`）
+  - Sidecar JSON 新增頂層欄位 `template_type`，artifacts 子命令據此自動 skip
+  - 中子分支自動跳過：Step 3 產 vCard / QR、Step 4 置入 QR、Step 9 上傳 vCard
+  - 輸出檔案數：TW 版 6 個 → 中子版 4 個（少 `.vcf` 與 `QR Code.svg`）
+
+### Changed
+- **SKILL.md frontmatter description** 更新涵蓋中子 BVI 版觸發判斷與初期測試規則
+- **SKILL.md Step 1**：`init` 範例補上 `--template-type` 參數說明
+- **SKILL.md Step 3 / 4 / 9**：標註中子版自動跳過
+- **SKILL.md 最終產出表**：拆成 TW 版（6 檔）/ 中子版（4 檔）兩張對照表
+- **docs/SOP.md**：完整流程章節新增「中子 BVI 版分支」簡化流程圖；P2 章節標完成
+
+### 設計動機
+- 依使用者明確指示：中子版**不產 vCard、不放 QR Code**（決定簡化方案），電話 prefix 同 `+886-2-2741-7065`（公司資訊不用分版設定檔）
+- 模板沒有 PH_QRCODE 命名（範本本身沒 QR 區塊），所以中子分支邏輯比想像中乾淨——不用偵測 / 移除 QR placeholder
+- 維持向後相容：`--template-type` 預設 `tw`，現有 SV 流程零改動
+- 依 `feedback_new_card_type_testing`：中子版屬新款測試階段，**初期每步驟須先停下確認**（雖然 code 完成，但跑第一次中子簽呈時不可全自動），跑 ≥ 2 次成功後才討論加入白名單
+
+### 回歸測試
+- **TW 版 sidecar**：含 `template_type: "tw"` + `artifacts` 區塊（vCard 流程資料）→ 與 v0.9.0 行為一致 ✓
+- **中子版 sidecar**：只有 `template_type: "zhongzi-bvi"` + `fields`，**無** `artifacts` 區塊 ✓
+- **中子版 `artifacts` 子命令**：偵測 sidecar template_type 後印「📋 中子版跳過 artifacts」並 exit 0 ✓
+- **`--template-type` 驗證**：傳無效值（如 `invalid`）報錯阻擋 ✓
+
+### 待手動處理（不在 v0.10.0 範圍，未來實際跑第一張中子簽呈時須注意）
+- 中子版**首次跑必須每步停下 GATE 確認**（不像 SV 版可一路衝）
+- 中子版**「無手機版」模板**尚未建（依需求驅動原則，等實際無手機簽呈進來再加）
+- 中子版**模板內 5 行固定文字**（北京/上海公司名與地址）目前仍 rasterized 在 .ai 檔，搬家時要手動編 Illustrator
+
 ## [0.9.0] — 2026-06-08
 
 ### Added
