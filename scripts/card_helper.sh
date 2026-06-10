@@ -510,7 +510,7 @@ APPLESCRIPT
         fi
 
         # STOR + retry（ProFTPD 偶有 transient 550，retry 一次幾乎都會 work）
-        # 注意：不要 DELE-then-STOR。實測 owner 對「owner 非自己」的檔有 STOR 覆寫權限，
+        # 注意：不要 DELE-then-STOR。實測：對「owner 非自己」的檔有 STOR 覆寫權限，
         # 但沒有 DELE 權限 — 跑 DELE 反而會 fail。直接 STOR 是對的路徑。
         upload_attempt() {
             curl -sS -fS --ftp-create-dirs \

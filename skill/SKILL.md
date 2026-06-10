@@ -55,7 +55,7 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 - **中英文 typo**：腳本照字面抓（如 `Strong Wo` 會原樣輸出），Claude 看 PDF 視覺判斷是否為 typo → 停下問
 - **「其他需求」非空且非「請協助送印」「TW」這類常見備註** → 停下問
 - **「表單註釋」`form_remark_is_placeholder=false` 表示申請人實際填了內容** → 停下問
-- **`template_type == "中子BVI"`**（v0.10.0+）→ 走中子分支（傳 `--template-type zhongzi-bvi --company bvi|wenhua`），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**初期每步驟先停下確認**（依 `feedback_new_card_type_testing` 規則，成功跑 ≥ 2 次才討論加入自動化）。**`--company` 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`**。輸出路徑分流（v0.10.1+）：bvi → `~/Documents/02_街聲/6 名片/中子`；wenhua → `~/Documents/02_街聲/6 名片/中子文化`
+- **`template_type == "中子BVI"`**（v0.10.0+）→ 走中子分支（傳 `--template-type zhongzi-bvi --company bvi|wenhua`），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**初期每步驟先停下確認**（依 `feedback_new_card_type_testing` 規則，成功跑 ≥ 2 次才討論加入自動化）。**`--company` 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`**。輸出路徑分流（v0.10.3+ 預設）：bvi → `~/Documents/SV-名片/中子`；wenhua → `~/Documents/SV-名片/中子文化`（可用 `SV_OUTPUT_BASE_ZHONGZI` / `SV_OUTPUT_BASE_ZHONGZI_WENHUA` 在 `~/.config/sv-card/env` 覆寫）
 - **`template_type != "TW 街聲"` 且 != "中子BVI"`**（CN / EN）→ 停下問（未支援）
 - **「名片上的姓名」與「申請人」不同**（外部夥伴情境）→ 雖然腳本仍能抽，但要跟使用者確認此為預期
 - **職稱中英文混填**（如「事業發展總監（英文: Business Development Director）」，v0.10.1+）→ **停下問使用者用中文還是英文**，再決定 `--title` 傳哪個值

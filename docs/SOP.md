@@ -75,8 +75,8 @@ Claude 自動依序：
        「中子創新（BVI）」→ bvi；「中子文化股份有限公司」→ wenhua
         ↓
 [我]  ④ 建資料夾 + 複製中子模板（`SV_TEMPLATE_ZHONGZI`），輸出 base 依 --company 分流：
-       bvi → $SV_OUTPUT_BASE_ZHONGZI（~/Documents/02_街聲/6 名片/中子）
-       wenhua → $SV_OUTPUT_BASE_ZHONGZI_WENHUA（~/Documents/02_街聲/6 名片/中子文化）
+       bvi → $SV_OUTPUT_BASE_ZHONGZI（v0.10.3+ 預設 ~/Documents/SV-名片/中子）
+       wenhua → $SV_OUTPUT_BASE_ZHONGZI_WENHUA（v0.10.3+ 預設 ~/Documents/SV-名片/中子文化）
         ↓
 [我]  ⑤ 開檔
         ↓
@@ -417,7 +417,7 @@ finalize.jsx 內部行為：
 
 > ⚠️ 第一次跑會跳 macOS Keychain 對話框「需要使用 Keychain」— 按「Always Allow」之後永久靜默。
 
-> ⚠️ 若改過密碼導致上傳 401：執行 `security delete-internet-password -s drive.streetvoice.com -a owner -l "sv-card upload (Streetvoice)"`，下次跑 upload-vcard 會再 prompt 新密碼。
+> ⚠️ 若改過密碼導致上傳 401：執行 `security delete-internet-password -s drive.streetvoice.com -a "$USER" -l "sv-card upload (Streetvoice)"`（其中 `-a "$USER"` 帶你的 Mac username；upload-vcard 預設用 `whoami` 取得），下次跑 upload-vcard 會再 prompt 新密碼。
 
 ---
 
