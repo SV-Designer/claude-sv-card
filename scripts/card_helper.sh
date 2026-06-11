@@ -69,14 +69,17 @@ SV_CARD_SKILL_DIR="${SV_CARD_SKILL_DIR:-$HOME/.claude/skills/sv-card}"
 SV_TEMPLATE="${SV_TEMPLATE:-$SV_CARD_SKILL_DIR/templates/20260522-王小明.ai}"
 SV_TEMPLATE_NO_MOBILE="${SV_TEMPLATE_NO_MOBILE:-$SV_CARD_SKILL_DIR/templates/20260529-王小明_無手機版.ai}"
 SV_TEMPLATE_ZHONGZI="${SV_TEMPLATE_ZHONGZI:-$SV_CARD_SKILL_DIR/templates/20260609-王小明_中子BVI.ai}"
-SV_OUTPUT_BASE="${SV_OUTPUT_BASE:-$HOME/Documents/名片/SV}"
-# 中子版輸出 base（v0.10.1+，依簽呈「公司」欄位分流）
-# v0.10.3+：預設改用 ~/Documents/名片/SV/ 子資料夾，跟 TW 版同根（對下載者友善）
-SV_OUTPUT_BASE_ZHONGZI="${SV_OUTPUT_BASE_ZHONGZI:-$HOME/Documents/名片/中子}"
-SV_OUTPUT_BASE_ZHONGZI_WENHUA="${SV_OUTPUT_BASE_ZHONGZI_WENHUA:-$HOME/Documents/名片/中子文化}"
+# v0.14.0+：SV_OUTPUT_BASE 改為「名片根目錄」（~/Documents/名片），各版型在其下接子資料夾。
+#   - TW 街聲版 → $SV_OUTPUT_BASE/SV（SV 子夾只在真的做 TW 版時才建）
+#   - 中子各版 → $SV_OUTPUT_BASE/{中子,中子文化,台灣中子}
+# 首次製作確認的就是這個根目錄；不再預先建 SV 子夾。
+SV_OUTPUT_BASE="${SV_OUTPUT_BASE:-$HOME/Documents/名片}"
+# 中子版輸出 base（v0.10.1+，依簽呈「公司」欄位分流；v0.14.0+ 由根目錄衍生，改根目錄會一起跟著走）
+SV_OUTPUT_BASE_ZHONGZI="${SV_OUTPUT_BASE_ZHONGZI:-$SV_OUTPUT_BASE/中子}"
+SV_OUTPUT_BASE_ZHONGZI_WENHUA="${SV_OUTPUT_BASE_ZHONGZI_WENHUA:-$SV_OUTPUT_BASE/中子文化}"
 # 台灣中子版（v0.12.0+，中子創新旗下台灣子公司；單一公司、無 --company 子分流）
 SV_TEMPLATE_ZHONGZI_TAIWAN="${SV_TEMPLATE_ZHONGZI_TAIWAN:-$SV_CARD_SKILL_DIR/templates/20260611-王小明_台灣中子.ai}"
-SV_OUTPUT_BASE_ZHONGZI_TAIWAN="${SV_OUTPUT_BASE_ZHONGZI_TAIWAN:-$HOME/Documents/名片/台灣中子}"
+SV_OUTPUT_BASE_ZHONGZI_TAIWAN="${SV_OUTPUT_BASE_ZHONGZI_TAIWAN:-$SV_OUTPUT_BASE/台灣中子}"
 SV_SIDECAR="${SV_SIDECAR:-/tmp/sv_card_fields.json}"
 
 # 預設模板（TW 有手機版）必存；其餘版型只在 init 真的選到時才檢查
@@ -270,7 +273,7 @@ EOF
             case "$company" in
                 bvi)    output_base="$SV_OUTPUT_BASE_ZHONGZI" ;;
                 wenhua) output_base="$SV_OUTPUT_BASE_ZHONGZI_WENHUA" ;;
-                *)      output_base="$SV_OUTPUT_BASE" ;;  # TW 版預設
+                *)      output_base="$SV_OUTPUT_BASE/SV" ;;  # TW 版：根目錄下 SV 子夾（v0.14.0+）
             esac
         fi
         dest_dir="$output_base/$name_folder"

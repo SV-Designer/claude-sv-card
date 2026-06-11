@@ -152,7 +152,7 @@ sv-card/
 `~/.config/sv-card/env` 範例：
 
 ```bash
-SV_OUTPUT_BASE="$HOME/Documents/名片/SV"
+SV_OUTPUT_BASE="$HOME/Documents/名片"   # v0.14.0+：名片根目錄；TW 版自動接 /SV，中子各版接 /中子 等子夾
 SV_TEMPLATE="$HOME/.claude/skills/sv-card/templates/20260522-王小明.ai"
 SV_TRANSMIT_FAVORITE="Streetvoice"
 SV_TRANSMIT_REMOTE_DIR="/vcard"
@@ -162,7 +162,7 @@ SV_TRANSMIT_REMOTE_DIR="/vcard"
 
 ## 產出位置
 
-`$SV_OUTPUT_BASE/{中文姓名}_{英文名去 alias}/` 下 5 個檔案（不在本 repo）：
+`$SV_OUTPUT_BASE/SV/{中文姓名}_{英文名去 alias}/`（TW 街聲版，v0.14.0+ 根目錄下 `SV` 子夾）下 5 個檔案（不在本 repo）：
 
 | 檔案 | 用途 |
 |---|---|

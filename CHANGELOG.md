@@ -6,6 +6,33 @@
 
 ## [Unreleased]
 
+## [0.14.0] — 2026-06-11
+
+### Changed
+- **台灣中子版 + 中子 BVI 版雙雙納入自動化白名單**（各跑通 2 次後畢業）：
+  - 台灣中子：v0.12.0 表單號 647／劉琪琪第 1 次 + 本版同簽呈第 2 次。
+  - 中子 BVI：v0.10.3 表單號 647 BVI 簽呈（修完 4 bug 後跑通）+ 本版同簽呈乾淨跑通。
+  - 兩版流程皆改為**全自動同 TW，僅 Step 6 GATE 需確認**，不再每步停下。
+  - **至此所有支援版型（TW 街聲 / 中子 BVI / 台灣中子）皆全自動**；逐步確認規則（memory `feedback_new_card_type_testing`）改為**僅未來新增版型**（CN / EN / Legacy 等）適用。
+  - 影響文件：`skill/SKILL.md`（frontmatter description + PDF 萃取規則中子BVI/台灣中子兩段）、`docs/SOP.md`（中子分支流程註記 + P2 待辦兩項）。
+- **`SV_OUTPUT_BASE` 語意改為「名片根目錄」**（`~/Documents/名片`），各版型在其下接子資料夾：
+  - TW 街聲版 → `$SV_OUTPUT_BASE/SV/`（`SV` 子夾只在真的做 TW 版時才建，不再於首次製作預先建立）
+  - 中子 BVI → `$SV_OUTPUT_BASE/中子`；中子文化 → `$SV_OUTPUT_BASE/中子文化`；台灣中子 → `$SV_OUTPUT_BASE/台灣中子`（三者由根目錄衍生，改根目錄會一起跟著走）
+  - **首次製作確認的是根目錄**（Step 0 訊息 A 由 `~/Documents/名片/SV` 改 `~/Documents/名片`）
+  - 影響檔案：`scripts/card_helper.sh`（`SV_OUTPUT_BASE` 預設 + 3 個中子 base 改衍生 + TW 版 `output_base` 接 `/SV`）、`install.sh`（`default_output`）、`skill/SKILL.md` / `docs/SOP.md` / `README.md` 路徑公式與 Step 0 文案同步。
+
+### Fixed
+- 補建 skill / SOP 長期引用卻不存在的 memory `feedback_new_card_type_testing`（規則本體仍指向決策原則 memory，新檔追蹤各版型測試→畢業狀態）。
+
+### 設計動機
+- 跑台灣中子第 2 次時，首次製作流程在做「台灣中子」名片卻去建 `~/Documents/名片/SV` 空夾並把它當輸出根 — 不合理。使用者拍板：**首次確認的應是名片根目錄 `~/Documents/名片`，`SV` 子夾屬 TW 街聲版專有，做 TW 時才建。**
+
+### 遷移注意
+- 既有安裝若 `~/.config/sv-card/env` 仍寫 `SV_OUTPUT_BASE=".../名片/SV"`，需改為根目錄 `.../名片`（否則 TW 會變 `.../名片/SV/SV`）。owner 本機 env 已於本版同步修正（備份 `env.bak-20260611`）。
+
+### 不破壞
+- TW 最終產出實體路徑不變（仍 `~/Documents/名片/SV/{name}`）；中子各版實體路徑不變。
+
 ## [0.13.0] — 2026-06-11
 
 ### Changed

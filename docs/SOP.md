@@ -27,7 +27,7 @@
 Claude 自動依序：
 1. 讀取此 SOP
 2. 讀 PDF 萃取個人資料
-3. **在 `$SV_OUTPUT_BASE/` 下建立新資料夾**（預設 `~/Documents/名片/SV/`，可由 `~/.config/sv-card/env` 覆寫），命名格式：`{中文姓名}_{英文名}`（不含 alias）
+3. **在 `$SV_OUTPUT_BASE/SV/` 下建立新資料夾**（v0.14.0+：`SV_OUTPUT_BASE` 為名片根目錄、TW 接 `/SV`；預設 `~/Documents/名片/SV/`，可由 `~/.config/sv-card/env` 覆寫），命名格式：`{中文姓名}_{英文名}`（不含 alias）
    - 例如：簽呈姓名 `王小明` + 英文名 `阿明 Ming Wang` → 資料夾 `王小明_Ming Wang`
 4. **複製模板**並重新命名成 `{YYYYMMDD}-{中文姓名}_{英文名}.ai`
 5. **自動 `open` 開啟 Illustrator + 載入該檔案**
@@ -102,7 +102,7 @@ Claude 自動依序：
 [我]  ⑫ ❌ 跳過 upload-vcard（沒產 vCard 不用上傳）
 ```
 
-> ⚠️ 初期 8 步流程依 memory `feedback_new_card_type_testing` 規則 **每步都要先停下確認**，不可一路衝到底。成功跑 ≥ 2 次後才討論加入自動化白名單。
+> ✅ **中子 BVI 版已於 v0.14.0 畢業納入自動化白名單**：流程同 TW 全自動，僅 Step 6 GATE 需確認，不再每步停下。上方 8 步流程圖保留供理解分支差異。逐步確認規則（memory `feedback_new_card_type_testing`）改為**僅未來新增版型**適用。
 
 ### 台灣中子版分支（v0.12.0+）
 
@@ -113,7 +113,7 @@ Claude 自動依序：
 - **輸出路徑**：`$SV_OUTPUT_BASE_ZHONGZI_TAIWAN`（預設 `~/Documents/名片/台灣中子`）。
 - email 同為 `@neuin.com`；office 電話/地址與街聲同（模板靜態）；分機照簽呈帶入。
 - 同中子 BVI：跳過 artifacts / QR / upload（card_helper.sh 與 finalize.jsx 一律以「`template_type != tw`」判斷 skip，v0.12.0+ 泛化）。
-- ⚠️ 同屬新款測試階段，初期每步先停下確認。
+- ✅ **已通過 2 次測試納入自動化白名單（v0.14.0）**：流程同 TW 全自動，僅 Step 6 GATE 需確認，不再每步停下。
 
 > 📌 模板製作補記（v0.12.0）：原始範例檔 FAX 行的文字框誤命名為 `PH_PHONE_MOBILE`（與手機框重名），會導致替換時手機號碼被寫進 FAX 行。repo 模板已修正（FAX 框改回靜態無名）。
 
@@ -229,7 +229,7 @@ vCard 與名片**不完全相同**，注意：
 
 ### Step 0：首次製作 — 確認名片存放路徑（僅首次跑）
 
-對應 SKILL.md Step 0。呼叫 `card_helper.sh check-firstrun` 判斷是否需走首次流程；若需，問使用者「① 路徑（A 預設 `~/Documents/名片/SV` / B 自訂）② 以後都用同路徑？」，回答後呼叫 `card_helper.sh confirm-firstrun "<路徑>"` 自動 mkdir + 開 Finder + 寫 `SV_OUTPUT_CONFIRMED=1` 到 `~/.config/sv-card/env`。完成後續跑 Step 1。
+對應 SKILL.md Step 0。呼叫 `card_helper.sh check-firstrun` 判斷是否需走首次流程；若需，問使用者「① 路徑（A 預設 `~/Documents/名片` 根目錄 / B 自訂）② 以後都用同路徑？」，回答後呼叫 `card_helper.sh confirm-firstrun "<路徑>"` 自動 mkdir + 開 Finder + 寫 `SV_OUTPUT_CONFIRMED=1` 到 `~/.config/sv-card/env`。完成後續跑 Step 1。v0.14.0+：確認的是**名片根目錄**（非 `SV` 子夾）；TW 版做的時候才在根目錄下自動建 `SV/`，中子各版建 `中子` / `中子文化` / `台灣中子`。
 
 ### Step 1：填欄位 + 建資料夾 + 開檔 + 寫 sidecar（`card_helper.sh init`）
 
@@ -247,7 +247,7 @@ vCard 與名片**不完全相同**，注意：
 **英文名取「去 alias」版本：** 若英文名是 `阿明 Ming Wang`，`--english` 取 `Ming Wang`（規則：移除最前面的中文 alias 部分）
 
 腳本內部行為：
-1. `mkdir -p $SV_OUTPUT_BASE/{chinese}_{english}`（路徑來自 `~/.config/sv-card/env` 或環境變數，預設 `~/Documents/名片/SV/`）
+1. `mkdir -p $SV_OUTPUT_BASE/SV/{chinese}_{english}`（TW 版；路徑來自 `~/.config/sv-card/env` 或環境變數，v0.14.0+ `SV_OUTPUT_BASE` 為根目錄、TW 接 `/SV`，預設 `~/Documents/名片/SV/`）
 2. `cp -L $SV_TEMPLATE` 到該資料夾並重新命名為 `{YYYYMMDD}-{chinese}_{english}.ai`（模板預設 `~/.claude/skills/sv-card/templates/20260522-王小明.ai`）
 3. **寫 sidecar `/tmp/sv_card_fields.json`**，內含 `fields` 區塊（7 個 PH_*）+ `artifacts` 區塊（vCard/QR 所需欄位）。內部推導：
    - `mobile_display = mobile.replace(" ", "-")` → 名片用
@@ -365,7 +365,7 @@ app.activeDocument.save();
 
 ### Step 12：Claude 輸出 5 個檔案到新資料夾（合併呼叫 `finalize.jsx` + `card_helper.sh finalize`）
 
-輸出資料夾：`$SV_OUTPUT_BASE/{NAME_FOLDER}/`（預設 `~/Documents/名片/SV/`）
+輸出資料夾：`$SV_OUTPUT_BASE/SV/{NAME_FOLDER}/`（TW 版，v0.14.0+ 根目錄下 `SV` 子夾；預設 `~/Documents/名片/SV/`）
 
 **12a. 一次跑完 Illustrator 端**（清殘留 + 存 original + 外框化 + 存 OL）：
 
@@ -524,8 +524,8 @@ finalize.jsx 內部行為：
 
 ### P2 — 需求驅動（等實際 PDF 進來再做）
 
-- [x] ~~中子 BVI 版~~（v0.10.0 完成 + v0.10.1 補強）— 模板 `templates/20260609-王小明_中子BVI.ai`，`--template-type zhongzi-bvi --company {bvi|wenhua}` 走簡化分支（跳過 vCard / QR / 上傳，輸出 4 個檔案，路徑依公司分流）。**初期測試階段**：依 `feedback_new_card_type_testing`，每步先停下確認，跑 ≥ 2 次成功後才討論加入自動化。
-- [x] ~~台灣中子版~~（v0.12.0 完成）— 模板 `templates/20260611-王小明_台灣中子.ai`，`--template-type zhongzi-taiwan`（單一公司，不需 `--company`）走中子簡化分支，輸出至 `~/Documents/名片/台灣中子`。skip 判斷由 `== zhongzi-bvi` 泛化為 `!= tw`（card_helper.sh + finalize.jsx）。**初期測試階段**同上。
+- [x] ~~中子 BVI 版~~（v0.10.0 完成 + v0.10.1 補強；**v0.14.0 納入自動化白名單**）— 模板 `templates/20260609-王小明_中子BVI.ai`，`--template-type zhongzi-bvi --company {bvi|wenhua}` 走簡化分支（跳過 vCard / QR / 上傳，輸出 4 個檔案，路徑依公司分流）。**已畢業 → 全自動同 TW，僅 Step 6 GATE 需確認。**
+- [x] ~~台灣中子版~~（v0.12.0 完成；**v0.14.0 通過 2 次測試納入自動化白名單**）— 模板 `templates/20260611-王小明_台灣中子.ai`，`--template-type zhongzi-taiwan`（單一公司，不需 `--company`）走中子簡化分支，輸出至 `~/Documents/名片/台灣中子`。skip 判斷由 `== zhongzi-bvi` 泛化為 `!= tw`（card_helper.sh + finalize.jsx）。**已畢業 → 全自動同 TW，僅 Step 6 GATE 需確認。**
 - [ ] **中子版 — 無手機版**：目前只做有手機版，等實際無手機簽呈進來再加（同 TW 版做法，另建 `SV_TEMPLATE_ZHONGZI_NO_MOBILE` 變數）
 - [ ] **CN / EN / Legacy（含色號）版**
       尚無範本，等實際簽呈進來再做。依 memory `feedback_sv_card_decisions` 原則 1 處理。

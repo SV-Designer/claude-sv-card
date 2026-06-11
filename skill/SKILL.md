@@ -1,6 +1,6 @@
 ---
 name: sv-card
-description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI 版 + 台灣中子版，v0.10.0+）。觸發詞：「做名片」/「作名片」/「做 SV 名片」/「做中子名片」/「做台灣中子名片」/「我要製作名片」/「幫我做 SV 名片」/「執行 SV_名片自動化製作」，並附簽呈 PDF（拖入或路徑）。版型路由：「做 SV 名片」/「幫我做 SV 名片」→ 期望 TW 街聲版；「做中子名片」→ 期望中子 BVI 版；「做台灣中子名片」→ 期望台灣中子版；「做名片」/「作名片」/「我要製作名片」/「執行 SV_名片自動化製作」→ 無指定，依簽呈「名片版型」欄位判斷（「TW 街聲」→ TW 全流程；「中子BVI」/「台灣中子」→ 中子分支，跳過 vCard / QR / 上傳）。觸發語明示版型時仍與簽呈版型交叉檢核，不一致即停下問。CN / EN 版尚未支援。中子系列（含台灣中子）屬新款測試階段，依 memory `feedback_new_card_type_testing` 規則，初期每步驟須先停下確認，不直接走自動流程；成功跑 ≥ 2 次後才討論加入自動化白名單。
+description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI 版 + 台灣中子版，v0.10.0+）。觸發詞：「做名片」/「作名片」/「做 SV 名片」/「做中子名片」/「做台灣中子名片」/「我要製作名片」/「幫我做 SV 名片」/「執行 SV_名片自動化製作」，並附簽呈 PDF（拖入或路徑）。版型路由：「做 SV 名片」/「幫我做 SV 名片」→ 期望 TW 街聲版；「做中子名片」→ 期望中子 BVI 版；「做台灣中子名片」→ 期望台灣中子版；「做名片」/「作名片」/「我要製作名片」/「執行 SV_名片自動化製作」→ 無指定，依簽呈「名片版型」欄位判斷（「TW 街聲」→ TW 全流程；「中子BVI」/「台灣中子」→ 中子分支，跳過 vCard / QR / 上傳）。觸發語明示版型時仍與簽呈版型交叉檢核，不一致即停下問。CN / EN 版尚未支援。目前所有支援版型（TW 街聲、中子 BVI、台灣中子）皆已納入自動化白名單（v0.14.0），全自動同 TW、僅 Step 6 GATE 需確認。**未來新增版型**仍依 memory `feedback_new_card_type_testing` 規則：初期每步驟先停下確認，成功跑 ≥ 2 次後才討論加入白名單。
 ---
 
 # SV 名片自動化製作
@@ -67,8 +67,8 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 - **中英文 typo**：腳本照字面抓（如 `Strong Wo` 會原樣輸出），Claude 看 PDF 視覺判斷是否為 typo → 停下問
 - **「其他需求」非空且非「請協助送印」「TW」這類常見備註** → 停下問
 - **「表單註釋」`form_remark_is_placeholder=false` 表示申請人實際填了內容** → 停下問
-- **`template_type == "中子BVI"`**（v0.10.0+）→ 走中子分支（傳 `--template-type zhongzi-bvi --company bvi|wenhua`），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**初期每步驟先停下確認**（依 `feedback_new_card_type_testing` 規則，成功跑 ≥ 2 次才討論加入自動化）。**`--company` 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`**。輸出路徑分流（v0.10.3+ 預設）：bvi → `~/Documents/名片/中子`；wenhua → `~/Documents/名片/中子文化`（可用 `SV_OUTPUT_BASE_ZHONGZI` / `SV_OUTPUT_BASE_ZHONGZI_WENHUA` 在 `~/.config/sv-card/env` 覆寫）
-- **`template_type == "台灣中子"`**（v0.12.0+）→ 走台灣中子分支（傳 `--template-type zhongzi-taiwan`，**不需 `--company`**），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**初期每步驟先停下確認**（依 `feedback_new_card_type_testing` 規則，成功跑 ≥ 2 次才討論加入自動化）。台灣中子是中子創新旗下台灣子公司，**單一公司、公司名「台灣中子創新股份有限公司」靜態寫死於模板**（無 PH_COMPANY，毋須推導）；員工 email 同為 `@neuin.com`。輸出路徑：`~/Documents/名片/台灣中子`（可用 `SV_OUTPUT_BASE_ZHONGZI_TAIWAN` 在 `~/.config/sv-card/env` 覆寫）
+- **`template_type == "中子BVI"`**（v0.10.0+）→ 走中子分支（傳 `--template-type zhongzi-bvi --company bvi|wenhua`），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**已通過測試納入自動化白名單（v0.14.0）**：流程同 TW 全自動，僅 Step 6 GATE 需確認。**`--company` 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`**。輸出路徑分流（v0.10.3+ 預設）：bvi → `~/Documents/名片/中子`；wenhua → `~/Documents/名片/中子文化`（可用 `SV_OUTPUT_BASE_ZHONGZI` / `SV_OUTPUT_BASE_ZHONGZI_WENHUA` 在 `~/.config/sv-card/env` 覆寫）
+- **`template_type == "台灣中子"`**（v0.12.0+）→ 走台灣中子分支（傳 `--template-type zhongzi-taiwan`，**不需 `--company`**），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**已通過 2 次測試納入自動化白名單（v0.14.0）**：流程同 TW 全自動，**僅 Step 6 GATE 需確認**，不再每步停下。台灣中子是中子創新旗下台灣子公司，**單一公司、公司名「台灣中子創新股份有限公司」靜態寫死於模板**（無 PH_COMPANY，毋須推導）；員工 email 同為 `@neuin.com`。輸出路徑：`~/Documents/名片/台灣中子`（可用 `SV_OUTPUT_BASE_ZHONGZI_TAIWAN` 在 `~/.config/sv-card/env` 覆寫）
 - **`template_type` 非「TW 街聲」、「中子BVI」、「台灣中子」**（CN / EN）→ 停下問（未支援）
 - **「名片上的姓名」與「申請人」不同**（外部夥伴情境）→ 雖然腳本仍能抽，但要跟使用者確認此為預期
 - **職稱中英文混填**（如「事業發展總監（英文: Business Development Director）」，v0.10.1+）→ **停下問使用者用中文還是英文**，再決定 `--title` 傳哪個值
@@ -88,7 +88,7 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 
 > 💡 **Illustrator dock 跳動提示**：執行 Step 2 / 4 / 7（含 `$.evalFile(.../jsx)` 的 mcp call）時，BridgeTalk 會讓 Illustrator dock 圖示跳動但不強制搶焦點 — macOS 對背景 GUI app 有 throttle，需使用者點一下 dock 才會繼續。
 >
-> **⚠️ 時機關鍵**：請在「送出 mcp call **之前**」（也就是 Claude Code UI 即將顯示 `Called illustrator` 之前）就先用文字提示使用者：**📌 點一下 Illustrator 以便繼續**。如果放在 mcp call 之後印，使用者在等 throttle 解除的這段時間看不到提示，會以為流程卡住。
+> **⚠️ 時機關鍵**：請在「送出 mcp call **之前**」（也就是 Claude Code UI 即將顯示 `Called illustrator` 之前）就先用文字提示使用者：**📌 點一下 Illustrator（dock 會跳動），並切回對話查看下一步**。如果放在 mcp call 之後印，使用者在等 throttle 解除的這段時間看不到提示，會以為流程卡住。
 
 ### Step 0：首次製作 — 確認名片存放路徑（僅首次跑）
 
@@ -105,17 +105,19 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 
 ```
 首次製作名片請先確認：
-① 名片製作檔存放路徑：
-　A. ~/Documents/名片/SV（預設）
+① 名片製作檔存放路徑（根目錄）：
+　A. ~/Documents/名片（預設）
 　B. 自訂（請輸入完整路徑）
 ② 以後都存同路徑？
 ```
+
+> v0.14.0+：這裡確認的是**名片根目錄**（所有版型的共同上層），不是 `SV` 子夾。TW 街聲版做的時候才會在根目錄下自動建 `SV/`，中子各版自動建 `中子` / `中子文化` / `台灣中子` 子夾。
 
 **b. 收到回答後，呼叫子命令**（自動 mkdir + open Finder + 寫 env 含 `SV_OUTPUT_CONFIRMED=1`）：
 
 ```bash
 # 選 A 或回 "OK"
-~/.claude/skills/sv-card/scripts/card_helper.sh confirm-firstrun "~/Documents/名片/SV"
+~/.claude/skills/sv-card/scripts/card_helper.sh confirm-firstrun "~/Documents/名片"
 # 選 B
 ~/.claude/skills/sv-card/scripts/card_helper.sh confirm-firstrun "<使用者輸入路徑>"
 ```
@@ -262,7 +264,7 @@ Claude 用此句問使用者（**逐字**，把實際檔名代入）：
 
 ## 📂 最終產出
 
-`$SV_OUTPUT_BASE/{中文姓名}_{英文名去alias}/`（預設 `~/Documents/名片/SV/`）內：
+`$SV_OUTPUT_BASE/SV/{中文姓名}_{英文名去alias}/`（v0.14.0+：`SV_OUTPUT_BASE` 為名片根目錄、TW 接 `/SV`；預設 `~/Documents/名片/SV/`）內：
 
 **TW 版（6 個檔案）：**
 
