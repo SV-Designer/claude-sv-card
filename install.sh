@@ -182,7 +182,7 @@ echo
 echo "⚙️  寫入使用者偏好 $CONFIG_FILE ..."
 mkdir -p "$CONFIG_DIR"
 
-default_output="$HOME/Documents/SV-名片"
+default_output="$HOME/Documents/名片/SV"
 default_template="$SKILL_DIR/templates/20260522-王小明.ai"
 
 # 若已有舊設定，沿用為新預設

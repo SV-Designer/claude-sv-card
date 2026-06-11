@@ -67,8 +67,8 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 - **中英文 typo**：腳本照字面抓（如 `Strong Wo` 會原樣輸出），Claude 看 PDF 視覺判斷是否為 typo → 停下問
 - **「其他需求」非空且非「請協助送印」「TW」這類常見備註** → 停下問
 - **「表單註釋」`form_remark_is_placeholder=false` 表示申請人實際填了內容** → 停下問
-- **`template_type == "中子BVI"`**（v0.10.0+）→ 走中子分支（傳 `--template-type zhongzi-bvi --company bvi|wenhua`），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**初期每步驟先停下確認**（依 `feedback_new_card_type_testing` 規則，成功跑 ≥ 2 次才討論加入自動化）。**`--company` 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`**。輸出路徑分流（v0.10.3+ 預設）：bvi → `~/Documents/SV-名片/中子`；wenhua → `~/Documents/SV-名片/中子文化`（可用 `SV_OUTPUT_BASE_ZHONGZI` / `SV_OUTPUT_BASE_ZHONGZI_WENHUA` 在 `~/.config/sv-card/env` 覆寫）
-- **`template_type == "台灣中子"`**（v0.12.0+）→ 走台灣中子分支（傳 `--template-type zhongzi-taiwan`，**不需 `--company`**），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**初期每步驟先停下確認**（依 `feedback_new_card_type_testing` 規則，成功跑 ≥ 2 次才討論加入自動化）。台灣中子是中子創新旗下台灣子公司，**單一公司、公司名「台灣中子創新股份有限公司」靜態寫死於模板**（無 PH_COMPANY，毋須推導）；員工 email 同為 `@neuin.com`。輸出路徑：`~/Documents/SV-名片/台灣中子`（可用 `SV_OUTPUT_BASE_ZHONGZI_TAIWAN` 在 `~/.config/sv-card/env` 覆寫）
+- **`template_type == "中子BVI"`**（v0.10.0+）→ 走中子分支（傳 `--template-type zhongzi-bvi --company bvi|wenhua`），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**初期每步驟先停下確認**（依 `feedback_new_card_type_testing` 規則，成功跑 ≥ 2 次才討論加入自動化）。**`--company` 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`**。輸出路徑分流（v0.10.3+ 預設）：bvi → `~/Documents/名片/中子`；wenhua → `~/Documents/名片/中子文化`（可用 `SV_OUTPUT_BASE_ZHONGZI` / `SV_OUTPUT_BASE_ZHONGZI_WENHUA` 在 `~/.config/sv-card/env` 覆寫）
+- **`template_type == "台灣中子"`**（v0.12.0+）→ 走台灣中子分支（傳 `--template-type zhongzi-taiwan`，**不需 `--company`**），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**初期每步驟先停下確認**（依 `feedback_new_card_type_testing` 規則，成功跑 ≥ 2 次才討論加入自動化）。台灣中子是中子創新旗下台灣子公司，**單一公司、公司名「台灣中子創新股份有限公司」靜態寫死於模板**（無 PH_COMPANY，毋須推導）；員工 email 同為 `@neuin.com`。輸出路徑：`~/Documents/名片/台灣中子`（可用 `SV_OUTPUT_BASE_ZHONGZI_TAIWAN` 在 `~/.config/sv-card/env` 覆寫）
 - **`template_type` 非「TW 街聲」、「中子BVI」、「台灣中子」**（CN / EN）→ 停下問（未支援）
 - **「名片上的姓名」與「申請人」不同**（外部夥伴情境）→ 雖然腳本仍能抽，但要跟使用者確認此為預期
 - **職稱中英文混填**（如「事業發展總監（英文: Business Development Director）」，v0.10.1+）→ **停下問使用者用中文還是英文**，再決定 `--title` 傳哪個值
@@ -106,7 +106,7 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 ```
 首次製作名片請先確認：
 ① 名片製作檔存放路徑：
-　A. ~/Documents/SV-名片（預設）
+　A. ~/Documents/名片/SV（預設）
 　B. 自訂（請輸入完整路徑）
 ② 以後都存同路徑？
 ```
@@ -115,7 +115,7 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 
 ```bash
 # 選 A 或回 "OK"
-~/.claude/skills/sv-card/scripts/card_helper.sh confirm-firstrun "~/Documents/SV-名片"
+~/.claude/skills/sv-card/scripts/card_helper.sh confirm-firstrun "~/Documents/名片/SV"
 # 選 B
 ~/.claude/skills/sv-card/scripts/card_helper.sh confirm-firstrun "<使用者輸入路徑>"
 ```
@@ -143,11 +143,11 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 > **`--template-type` 為選填**（v0.10.0+，預設 `tw`）：
 > - `tw`（預設）→ SV 全流程，含 vCard / QR / 上傳
 > - `zhongzi-bvi` → 中子 BVI 版（簽呈版型「中子BVI」），用 `SV_TEMPLATE_ZHONGZI` 模板；sidecar 不寫 artifacts 區塊，Step 3 / 4 / 9 自動跳過
-> - `zhongzi-taiwan` → 台灣中子版（簽呈版型「台灣中子」，v0.12.0+），用 `SV_TEMPLATE_ZHONGZI_TAIWAN` 模板；**不傳 `--company`**；輸出至 `$SV_OUTPUT_BASE_ZHONGZI_TAIWAN`（預設 `~/Documents/SV-名片/台灣中子`）；公司名「台灣中子創新股份有限公司」靜態於模板（無 PH_COMPANY）；同中子 BVI 跳過 Step 3 / 4 / 9
+> - `zhongzi-taiwan` → 台灣中子版（簽呈版型「台灣中子」，v0.12.0+），用 `SV_TEMPLATE_ZHONGZI_TAIWAN` 模板；**不傳 `--company`**；輸出至 `$SV_OUTPUT_BASE_ZHONGZI_TAIWAN`（預設 `~/Documents/名片/台灣中子`）；公司名「台灣中子創新股份有限公司」靜態於模板（無 PH_COMPANY）；同中子 BVI 跳過 Step 3 / 4 / 9
 >
 > **`--company` 僅 `--template-type zhongzi-bvi` 時必填**（v0.10.1+；`zhongzi-taiwan` 單一公司不需 company）：
-> - `bvi` → 中子創新（BVI）員工，輸出至 `$SV_OUTPUT_BASE_ZHONGZI`（v0.10.3+ 預設 `~/Documents/SV-名片/中子`），名片印「中子創新有限公司」
-> - `wenhua` → 中子文化股份有限公司員工，輸出至 `$SV_OUTPUT_BASE_ZHONGZI_WENHUA`（v0.10.3+ 預設 `~/Documents/SV-名片/中子文化`），名片印「中子文化股份有限公司」
+> - `bvi` → 中子創新（BVI）員工，輸出至 `$SV_OUTPUT_BASE_ZHONGZI`（v0.10.3+ 預設 `~/Documents/名片/中子`），名片印「中子創新有限公司」
+> - `wenhua` → 中子文化股份有限公司員工，輸出至 `$SV_OUTPUT_BASE_ZHONGZI_WENHUA`（v0.10.3+ 預設 `~/Documents/名片/中子文化`），名片印「中子文化股份有限公司」
 > - 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`
 > - **`PH_COMPANY` 文字框會被自動替換**（v0.10.2+）：bvi → `中子創新有限公司`；wenhua → `中子文化股份有限公司`
 >
@@ -262,7 +262,7 @@ Claude 用此句問使用者（**逐字**，把實際檔名代入）：
 
 ## 📂 最終產出
 
-`$SV_OUTPUT_BASE/{中文姓名}_{英文名去alias}/`（預設 `~/Documents/SV-名片/`）內：
+`$SV_OUTPUT_BASE/{中文姓名}_{英文名去alias}/`（預設 `~/Documents/名片/SV/`）內：
 
 **TW 版（6 個檔案）：**
 

@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+## [0.13.0] — 2026-06-11
+
+### Changed
+- **預設輸出路徑根目錄改 `~/Documents/SV-名片/` → `~/Documents/名片/`**，並讓 SV 街聲版也收進自己的子資料夾（與中子系列一致）：
+  - SV 街聲：`~/Documents/SV-名片/`（原直接放根）→ `~/Documents/名片/SV`
+  - 中子 BVI：`~/Documents/SV-名片/中子` → `~/Documents/名片/中子`
+  - 中子文化：`~/Documents/SV-名片/中子文化` → `~/Documents/名片/中子文化`
+  - 台灣中子：`~/Documents/SV-名片/台灣中子` → `~/Documents/名片/台灣中子`
+- 影響檔案：`scripts/card_helper.sh`（4 個 `SV_OUTPUT_BASE*` 預設）、`install.sh`（`default_output`）、`README.md` / `skill/SKILL.md` / `docs/SOP.md` 文件同步。
+- 使用者仍可在 `~/.config/sv-card/env` 自訂覆寫；既有安裝若已設 env 不受影響。
+
 ## [0.12.0] — 2026-06-11
 
 ### Added

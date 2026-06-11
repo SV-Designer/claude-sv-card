@@ -36,7 +36,7 @@ Claude 會自動：
 4. 停下來問你「**請確認資訊無誤**」← ‼️唯一需要手動的地方‼️
 5. 你確認 OK 後，自動產出 5 個檔案 + 上傳 vCard 到 server
 
-完成後 5 個交付檔會放在 `~/Documents/SV-名片/{你的中文名}_{英文名}/`（路徑可改，見下方「設定覆寫」）。
+完成後 5 個交付檔會放在 `~/Documents/名片/SV/{你的中文名}_{英文名}/`（路徑可改，見下方「設定覆寫」）。
 
 
 
@@ -48,7 +48,7 @@ Claude 會自動：
 | 做名片時 Illustrator 沒開起來 | 第一次跑時 Claude 會說「請確保 illustator 為關閉狀態」，先把 Illustrator 關掉再重觸發 |
 | 簽呈 PDF 資料萃取錯了 | 直接告訴 Claude「職稱應該是 XXX」，它會重做 |
 | 想換名片存放路徑 | 編輯 `~/.config/sv-card/env`，改 `SV_OUTPUT_BASE="你的新路徑"` |
-| 想找以前做過的名片 | 都在 `~/Documents/SV-名片/`（或你自己設的路徑）內，依中文姓名分資料夾 |
+| 想找以前做過的名片 | 都在 `~/Documents/名片/SV/`（或你自己設的路徑）內，依中文姓名分資料夾 |
 
 如 Claude 無法正常運作，請截圖 slack 洽產品工程部。
 
@@ -91,7 +91,7 @@ Claude 會自動：
    ```bash
    bash ~/Projects/sv-card/install.sh --yes
    ```
-   `--yes` 模式會使用預設值（輸出 `~/Documents/SV-名片`、模板用 repo 內附範例、`SV_OUTPUT_CONFIRMED=0` 留待首次製作時引導確認）。
+   `--yes` 模式會使用預設值（輸出 `~/Documents/名片/SV`、模板用 repo 內附範例、`SV_OUTPUT_CONFIRMED=0` 留待首次製作時引導確認）。
 
 4. **install.sh 內部會做的事**（你不需手動拆解，但需要時可知道）：
    - 檢查 Adobe Illustrator / python3 / `qrcode` 套件（缺 qrcode 會自動 pip install）
@@ -152,7 +152,7 @@ sv-card/
 `~/.config/sv-card/env` 範例：
 
 ```bash
-SV_OUTPUT_BASE="$HOME/Documents/SV-名片"
+SV_OUTPUT_BASE="$HOME/Documents/名片/SV"
 SV_TEMPLATE="$HOME/.claude/skills/sv-card/templates/20260522-王小明.ai"
 SV_TRANSMIT_FAVORITE="Streetvoice"
 SV_TRANSMIT_REMOTE_DIR="/vcard"
