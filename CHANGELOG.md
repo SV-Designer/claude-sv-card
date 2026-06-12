@@ -6,6 +6,11 @@
 
 ## [Unreleased]
 
+## [0.17.2] — 2026-06-12
+
+### Changed
+- 經典復刻款 template `PH_NAME_EN` 描邊統一為 **0.4pt**（先前 repo 0.5pt / 本地來源 0.25pt 不一致 → 兩邊同步為 0.4pt）。repo + 本地來源 template 一併更新。
+
 ## [0.17.1] — 2026-06-12
 
 ### Changed
