@@ -6,6 +6,20 @@
 
 ## [Unreleased]
 
+## [0.16.0] — 2026-06-12
+
+### Changed
+- **公司電話改固定靜態、分機獨立成新框 `PH_PHONE_EXT`**（三版新 template，2026-06-12）：
+  - 公司電話 `+886-2-2741-7065` 改為**靜態文字框**（名為「公司電話」，無 `PH_` 前綴 → 腳本不替換）；分機獨立成新框 `PH_PHONE_EXT`，值 = `#`+分機（對照 PDF 室內分機），**簽呈留白 → 框留空**（sidecar 一律寫 `PH_PHONE_EXT`，即使空字串也寫，以清掉模板範例 `#375`）。
+  - 三個新版 template 進 repo：`20260612-王小明.ai`（TW 有手機）/ `20260612-王小明_中子BVI.ai` / `20260612-王小明_台灣中子.ai`，取代舊 `20260522` / `20260609` / `20260611`。
+  - `card_helper.sh init` 新增 `legacy_office` 旗標：新版三 template 寫 `PH_PHONE_EXT`；**舊無手機版 `20260529`（暫不更新）走 `legacy_office=1` 維持舊合成框 `PH_PHONE_OFFICE`**，兩套並存相容。
+  - **框名採英文 `PH_PHONE_EXT`**（與既有 `PH_PHONE_OFFICE` / `PH_PHONE_MOBILE` 一致、較穩定）：六個 template（repo 三 + 來源三 `Claude/SV/.../一般名片/`）的框名經 Illustrator 由中文 `PH_PHONE_分機` 一併改為 `PH_PHONE_EXT`，避免下次從來源更新時回退。
+  - 框名以 Illustrator 實讀確認（非口述）；端到端實測 `replace_fields.jsx` 替換 `PH_PHONE_EXT` 成功（`replaced=7`，無 missing，框內容正確）。
+  - 影響：`scripts/card_helper.sh`（模板路徑預設 + 電話邏輯）、`install.sh`（模板檔名檢查）、`tests/sidecar_schema.json`（新增 `PH_PHONE_EXT`、`PH_PHONE_OFFICE` 改 anyOf 二擇一）、9 個 fixture、`skill/SKILL.md`、`docs/SOP.md`、`README.md`。
+- **PDF 萃取 GATE 規則調整**（`skill/SKILL.md` + `docs/SOP.md`）：
+  - 「表單註釋」欄位內容**改為完全忽略**，不再因 `form_remark_is_placeholder=false` 停下確認（腳本仍抽出 `form_remark` 欄位但不採用）。
+  - 「其他需求」欄位措辭明確化：通常為空白，僅在有「請協助送印」「TW」以外的特殊備註時才停下確認（行為不變，敘述更清楚）。
+
 ## [0.15.0] — 2026-06-12
 
 ### Added

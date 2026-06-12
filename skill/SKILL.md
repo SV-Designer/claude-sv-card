@@ -60,13 +60,13 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 | `office_ext` | 分機（→ `--office-ext`，null = 簽呈空白，傳 `""`）|
 | `mobile` | 簽呈原格式手機（→ `--mobile`，null = 簽呈空白，傳 `""`）|
 | `template_type` | 版型（v0.10.0+：「TW 街聲」→ `--template-type tw`；「中子BVI」→ `--template-type zhongzi-bvi`；「台灣中子」→ `--template-type zhongzi-taiwan`（v0.12.0+）；其餘版型停下問）|
-| `other_requests` | 「其他需求」欄位純文字 |
-| `form_remark` + `form_remark_is_placeholder` | 「表單註釋」欄位文字，placeholder=true 代表是系統提示文字不是申請人填的 |
+| `other_requests` | 「其他需求」欄位純文字（通常空白；有特殊備註才停下確認）|
+| `form_remark` + `form_remark_is_placeholder` | 「表單註釋」欄位文字 — **內容可完全忽略**，不作為停下判斷（腳本仍抽出但不採用）|
 
 **Claude 必看項**（腳本抓不到的判斷）：
 - **中英文 typo**：腳本照字面抓（如 `Strong Wo` 會原樣輸出），Claude 看 PDF 視覺判斷是否為 typo → 停下問
-- **「其他需求」非空且非「請協助送印」「TW」這類常見備註** → 停下問
-- **「表單註釋」`form_remark_is_placeholder=false` 表示申請人實際填了內容** → 停下問
+- **「其他需求」欄位通常為空白**；若有「請協助送印」「TW」以外的特殊備註 → 停下問
+- **「表單註釋」欄位內容可完全忽略** —— 不論 placeholder 與否，皆不作為停下判斷
 - **`template_type == "中子BVI"`**（v0.10.0+）→ 走中子分支（傳 `--template-type zhongzi-bvi --company bvi|wenhua`），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**已通過測試納入自動化白名單（v0.14.0）**：流程同 TW 全自動，僅 Step 6 GATE 需確認。**`--company` 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`**。輸出路徑分流（v0.10.3+ 預設）：bvi → `~/Documents/名片/中子`；wenhua → `~/Documents/名片/中子文化`（可用 `SV_OUTPUT_BASE_ZHONGZI` / `SV_OUTPUT_BASE_ZHONGZI_WENHUA` 在 `~/.config/sv-card/env` 覆寫）
 - **`template_type == "台灣中子"`**（v0.12.0+）→ 走台灣中子分支（傳 `--template-type zhongzi-taiwan`，**不需 `--company`**），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**已通過 2 次測試納入自動化白名單（v0.14.0）**：流程同 TW 全自動，**僅 Step 6 GATE 需確認**，不再每步停下。台灣中子是中子創新旗下台灣子公司，**單一公司、公司名「台灣中子創新股份有限公司」靜態寫死於模板**（無 PH_COMPANY，毋須推導）；員工 email 同為 `@neuin.com`。輸出路徑：`~/Documents/名片/台灣中子`（可用 `SV_OUTPUT_BASE_ZHONGZI_TAIWAN` 在 `~/.config/sv-card/env` 覆寫）
 - **`template_type` 非「TW 街聲」、「中子BVI」、「台灣中子」**（CN / EN）→ 停下問（未支援）
@@ -140,7 +140,7 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 ```
 > **`--mobile` / `--office-ext` 為選填**：簽呈空白時傳空字串 `""`（或不傳）。
 > - `--mobile ""` → 自動選無手機版模板（SV_TEMPLATE_NO_MOBILE）、vCard 跳過 TEL CELL
-> - `--office-ext ""` → PH_PHONE_OFFICE 顯示 `+886-2-2741-7065`（不含 `#`）
+> - `--office-ext ""` → 新版分機框 `PH_PHONE_EXT` 留空（公司電話 `+886-2-2741-7065` 靜態於模板）；無手機版仍走舊 `PH_PHONE_OFFICE`
 >
 > **`--template-type` 為選填**（v0.10.0+，預設 `tw`）：
 > - `tw`（預設）→ SV 全流程，含 vCard / QR / 上傳
@@ -153,7 +153,7 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
 > - 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`
 > - **`PH_COMPANY` 文字框會被自動替換**（v0.10.2+）：bvi → `中子創新有限公司`；wenhua → `中子文化股份有限公司`
 >
-> init 內部推導：名片用 `PH_PHONE_MOBILE`（空格→dash、開頭 `0` → `+886-`，v0.8.4+）、vCard `mobile`（沿用簽呈原格式）、`vcf-name`（英文名去空格+.vcf）、PH_PHONE_OFFICE。
+> init 內部推導：名片用 `PH_PHONE_MOBILE`（空格→dash、開頭 `0` → `+886-`，v0.8.4+）、vCard `mobile`（沿用簽呈原格式）、`vcf-name`（英文名去空格+.vcf）、`PH_PHONE_EXT`（`#`+分機，新版三 template；無手機版改 `PH_PHONE_OFFICE` 合成框）。
 > 資料寫入 `/tmp/sv_card_fields.json` sidecar，Step 2/3 自動讀取。腳本印出 `BASENAME=...` 和 `DEST_DIR=...` 給 Step 8 收尾用。
 
 ### Step 1.5：備份簽呈 PDF（v0.8.5+）
@@ -301,10 +301,10 @@ Claude 用此句問使用者（**逐字**，把實際檔名代入）：
 
 | 用途 | 路徑 |
 |---|---|
-| 模板 .ai（TW 有手機版，預設）| `~/.claude/skills/sv-card/templates/20260522-王小明.ai` |
+| 模板 .ai（TW 有手機版，預設）| `~/.claude/skills/sv-card/templates/20260612-王小明.ai` |
 | 模板 .ai（TW 無手機版）| `~/.claude/skills/sv-card/templates/20260529-王小明_無手機版.ai`（簽呈無手機時自動選用）|
-| 模板 .ai（中子 BVI 版，v0.10.0+）| `~/.claude/skills/sv-card/templates/20260609-王小明_中子BVI.ai`（簽呈版型「中子BVI」時用 `--template-type zhongzi-bvi`）|
-| 模板 .ai（台灣中子版，v0.12.0+）| `~/.claude/skills/sv-card/templates/20260611-王小明_台灣中子.ai`（簽呈版型「台灣中子」時用 `--template-type zhongzi-taiwan`）|
+| 模板 .ai（中子 BVI 版，v0.10.0+）| `~/.claude/skills/sv-card/templates/20260612-王小明_中子BVI.ai`（簽呈版型「中子BVI」時用 `--template-type zhongzi-bvi`）|
+| 模板 .ai（台灣中子版，v0.12.0+）| `~/.claude/skills/sv-card/templates/20260612-王小明_台灣中子.ai`（簽呈版型「台灣中子」時用 `--template-type zhongzi-taiwan`）|
 | Bash 操作合集 | `~/.claude/skills/sv-card/scripts/card_helper.sh` |
 | vCard + QR + 預處理 | `~/.claude/skills/sv-card/scripts/make_card_artifacts.py` |
 | 欄位替換 + 存檔 | `~/.claude/skills/sv-card/scripts/replace_fields.jsx` |

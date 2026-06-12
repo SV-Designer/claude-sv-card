@@ -8,22 +8,26 @@
   "properties": {
     "fields": {
       "type": "object",
-      "description": "Step 2 replace_fields.jsx 替換到 .ai 的 PH_* 欄位。PH_PHONE_MOBILE 為選填（簽呈沒填手機時 omit）；PH_COMPANY 僅中子 BVI 版有（動態公司名）。",
+      "description": "Step 2 replace_fields.jsx 替換到 .ai 的 PH_* 欄位。電話欄位二擇一（見 anyOf）：新版三 template 用 PH_PHONE_EXT（公司電話靜態於模板）；舊無手機版用合成框 PH_PHONE_OFFICE。PH_PHONE_MOBILE 選填（簽呈沒填手機時 omit）；PH_COMPANY 僅中子 BVI 版有。",
       "required": [
         "PH_NAME_CN_SURNAME",
         "PH_NAME_CN_GIVEN",
         "PH_NAME_EN",
         "PH_TITLE",
-        "PH_PHONE_OFFICE",
         "PH_EMAIL"
       ],
       "additionalProperties": false,
+      "anyOf": [
+        {"required": ["PH_PHONE_EXT"]},
+        {"required": ["PH_PHONE_OFFICE"]}
+      ],
       "properties": {
         "PH_NAME_CN_SURNAME": {"type": "string", "minLength": 1},
         "PH_NAME_CN_GIVEN":   {"type": "string", "minLength": 1},
         "PH_NAME_EN":         {"type": "string", "minLength": 1},
         "PH_TITLE":           {"type": "string", "minLength": 1},
-        "PH_PHONE_OFFICE":    {"type": "string", "pattern": "^\\+886-2-2741-7065(#\\d+)?$"},
+        "PH_PHONE_EXT":       {"type": "string", "pattern": "^(#\\d+)?$", "description": "新版分機框（v0.15.x）：有分機 = #+數字（例 #375），簽呈留白 = 空字串（清掉模板範例值）"},
+        "PH_PHONE_OFFICE":    {"type": "string", "pattern": "^\\+886-2-2741-7065(#\\d+)?$", "description": "舊無手機版（20260529）合成框：公司電話[+#分機]"},
         "PH_PHONE_MOBILE":    {"type": "string", "pattern": "^\\+886-\\d{3}-\\d{3}-\\d{3,4}$"},
         "PH_EMAIL":           {"type": "string", "format": "email"},
         "PH_COMPANY":         {"type": "string", "minLength": 1, "description": "中子 BVI 版動態公司名（中子創新有限公司 / 中子文化股份有限公司）"}

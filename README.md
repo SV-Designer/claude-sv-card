@@ -115,7 +115,7 @@ Claude 會自動：
 | `setup-mcp.sh` 報 `uv: command not found` | 缺 uv | `brew install uv`，再重跑 |
 | `git apply --check` 失敗 | server.py 已被別人改過 | 看 `scripts/mcp-patches/illustrator-mcp-server.patch` 手動 merge |
 | 重啟後 Claude 仍看不到工具 | settings 寫到 project-level 而非 user-level | 直接 grep `~/.claude.json` 看 `mcpServers.illustrator` 是否在頂層 |
-| 模板 `.ai` 缺失 | repo 內 templates/ 沒抓到 | 確認 `~/.claude/skills/sv-card/templates/20260522-王小明.ai` symlink 沒斷 |
+| 模板 `.ai` 缺失 | repo 內 templates/ 沒抓到 | 確認 `~/.claude/skills/sv-card/templates/20260612-王小明.ai` symlink 沒斷 |
 | 首次 upload-vcard 跳 Keychain 對話框 | 正常 — macOS 第一次 access keychain 會問 | 按 "Always Allow" |
 
 ## 結構
@@ -131,7 +131,7 @@ sv-card/
 │   ├── replace_fields.jsx        ExtendScript：替換 7 個 PH_* 欄位
 │   ├── place_qr.jsx              ExtendScript：QR 置入 + CMYK 染色
 │   └── finalize.jsx              ExtendScript：GATE 後合併收尾
-├── templates/           Illustrator 模板（假名範例 20260522-王小明.ai）
+├── templates/           Illustrator 模板（假名範例 20260612-王小明.ai）
 ├── skill/SKILL.md       Claude Code skill 入口
 └── docs/SOP.md          完整 SOP 與已知問題
 ```
@@ -153,7 +153,7 @@ sv-card/
 
 ```bash
 SV_OUTPUT_BASE="$HOME/Documents/名片"   # v0.14.0+：名片根目錄；TW 版自動接 /SV，中子各版接 /中子 等子夾
-SV_TEMPLATE="$HOME/.claude/skills/sv-card/templates/20260522-王小明.ai"
+SV_TEMPLATE="$HOME/.claude/skills/sv-card/templates/20260612-王小明.ai"
 SV_TRANSMIT_FAVORITE="Streetvoice"
 SV_TRANSMIT_REMOTE_DIR="/vcard"
 ```

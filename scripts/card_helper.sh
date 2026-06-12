@@ -15,7 +15,7 @@
 #       建資料夾 + 複製模板 + 開 Illustrator + 輪詢 + 寫 sidecar /tmp/sv_card_fields.json
 #       sidecar 內含 Step 2 (fields) + Step 3 (artifacts) 兩區塊，後續步驟皆從此讀取
 #       --mobile 空（或不傳）→ 用無手機版模板（SV_TEMPLATE_NO_MOBILE）；vCard 跳過 TEL CELL
-#       --office-ext 空（或不傳）→ PH_PHONE_OFFICE 不含 # 分機，只有 +886-2-2741-7065
+#       --office-ext 空（或不傳）→ 新版分機框 PH_PHONE_EXT 留空；公司電話固定靜態於模板
 #
 #   card_helper.sh artifacts [args...]
 #       無 args → 預設讀 /tmp/sv_card_fields.json 的 artifacts 區塊
@@ -66,9 +66,9 @@ set -e
 
 # 可由環境變數或 ~/.config/sv-card/env 覆寫
 SV_CARD_SKILL_DIR="${SV_CARD_SKILL_DIR:-$HOME/.claude/skills/sv-card}"
-SV_TEMPLATE="${SV_TEMPLATE:-$SV_CARD_SKILL_DIR/templates/20260522-王小明.ai}"
+SV_TEMPLATE="${SV_TEMPLATE:-$SV_CARD_SKILL_DIR/templates/20260612-王小明.ai}"
 SV_TEMPLATE_NO_MOBILE="${SV_TEMPLATE_NO_MOBILE:-$SV_CARD_SKILL_DIR/templates/20260529-王小明_無手機版.ai}"
-SV_TEMPLATE_ZHONGZI="${SV_TEMPLATE_ZHONGZI:-$SV_CARD_SKILL_DIR/templates/20260609-王小明_中子BVI.ai}"
+SV_TEMPLATE_ZHONGZI="${SV_TEMPLATE_ZHONGZI:-$SV_CARD_SKILL_DIR/templates/20260612-王小明_中子BVI.ai}"
 # v0.14.0+：SV_OUTPUT_BASE 改為「名片根目錄」（~/Documents/名片），各版型在其下接子資料夾。
 #   - TW 街聲版 → $SV_OUTPUT_BASE/SV（SV 子夾只在真的做 TW 版時才建）
 #   - 中子各版 → $SV_OUTPUT_BASE/{中子,中子文化,台灣中子}
@@ -78,7 +78,7 @@ SV_OUTPUT_BASE="${SV_OUTPUT_BASE:-$HOME/Documents/名片}"
 SV_OUTPUT_BASE_ZHONGZI="${SV_OUTPUT_BASE_ZHONGZI:-$SV_OUTPUT_BASE/中子}"
 SV_OUTPUT_BASE_ZHONGZI_WENHUA="${SV_OUTPUT_BASE_ZHONGZI_WENHUA:-$SV_OUTPUT_BASE/中子文化}"
 # 台灣中子版（v0.12.0+，中子創新旗下台灣子公司；單一公司、無 --company 子分流）
-SV_TEMPLATE_ZHONGZI_TAIWAN="${SV_TEMPLATE_ZHONGZI_TAIWAN:-$SV_CARD_SKILL_DIR/templates/20260611-王小明_台灣中子.ai}"
+SV_TEMPLATE_ZHONGZI_TAIWAN="${SV_TEMPLATE_ZHONGZI_TAIWAN:-$SV_CARD_SKILL_DIR/templates/20260612-王小明_台灣中子.ai}"
 SV_OUTPUT_BASE_ZHONGZI_TAIWAN="${SV_OUTPUT_BASE_ZHONGZI_TAIWAN:-$SV_OUTPUT_BASE/台灣中子}"
 SV_SIDECAR="${SV_SIDECAR:-/tmp/sv_card_fields.json}"
 
@@ -216,11 +216,16 @@ EOF
             echo "          --title ... --email ... [--mobile ...] [--office-ext ...]" >&2
             echo "          [--template-type tw|zhongzi-bvi]" >&2
             echo "  --mobile 空（或不傳）→ 用無手機版模板，vCard 跳過 TEL CELL 行" >&2
-            echo "  --office-ext 空（或不傳）→ 公司電話 PH_PHONE_OFFICE 不含 # 分機" >&2
+            echo "  --office-ext 空（或不傳）→ 新版分機框 PH_PHONE_EXT 留空（公司電話靜態於模板）" >&2
             echo "  --template-type 預設 'tw'，中子版傳 'zhongzi-bvi'（跳過 vCard / QR）" >&2
             exit 1
         fi
 
+        # legacy_office：1 = 舊無手機版 template（仍用合成框 PH_PHONE_OFFICE）；
+        #                0 = 新版三 template（公司電話靜態於 template，只填分機框 PH_PHONE_EXT）
+        # v0.15.x：公司電話改固定靜態，分機獨立框（對照 PDF 室內分機，留白則框留白）。
+        #          無手機版（20260529）依使用者要求暫不更新，故維持舊 PH_PHONE_OFFICE 邏輯。
+        legacy_office=0
         # 選模板（v0.10.0+ 加中子版分支；v0.12.0+ 加台灣中子分支）
         if [ "$template_type" = "zhongzi-bvi" ]; then
             template="$SV_TEMPLATE_ZHONGZI"
@@ -257,8 +262,9 @@ EOF
                 exit 1
             fi
             echo "📋 使用無手機版模板（簽呈沒填手機）"
+            legacy_office=1   # 無手機版仍是舊框 PH_PHONE_OFFICE（公司電話+分機合成）
         else
-            # TW 有手機版（預設）
+            # TW 有手機版（預設，新版）
             template="$SV_TEMPLATE"
         fi
 
@@ -286,13 +292,15 @@ EOF
 
         # 寫 sidecar JSON
         # 處理規則：
-        #   - office_ext 空 → PH_PHONE_OFFICE 不含 # 分機，只有 +886-2-2741-7065
-        #   - mobile 空    → fields 不放 PH_PHONE_MOBILE（replace_fields.jsx 找不到會 silent skip）
-        #                    artifacts 也不放 mobile（make_vcard.py 會跳過 TEL CELL 行）
+        #   - 新版三 template（legacy_office=0）：公司電話靜態於 template，只填分機框
+        #     PH_PHONE_EXT = "#" + 分機（office_ext 空 → 寫空字串 ""，清掉模板範例 #375）
+        #   - 舊無手機版（legacy_office=1）：沿用合成框 PH_PHONE_OFFICE（office_ext 空 → 純電話號）
+        #   - mobile 空 → fields 不放 PH_PHONE_MOBILE（replace_fields.jsx 找不到會 silent skip）
+        #                 artifacts 也不放 mobile（make_vcard.py 會跳過 TEL CELL 行）
         SURNAME="$surname" GIVEN="$given" EN="$english_name" \
         TITLE="$title" EMAIL="$email" MOBILE="$mobile" \
         OFFICE_EXT="$office_ext" DEST_DIR="$dest_dir" \
-        DEST_PATH="$new_file" \
+        DEST_PATH="$new_file" LEGACY_OFFICE="$legacy_office" \
         TEMPLATE_TYPE="$template_type" COMPANY="$company" \
         SV_CARD_SCRIPT_DIR="$SV_CARD_SKILL_DIR/scripts" \
         python3 - <<'PYEOF' > "$SV_SIDECAR"
@@ -308,19 +316,27 @@ company        = os.environ["COMPANY"]
 dest_path      = os.environ["DEST_PATH"]  # v0.10.3+：jsx 用此繞 corrupt fullName
 vcf_name       = en.replace(" ", "") + ".vcf"
 
-# PH_PHONE_OFFICE：有 ext 加 #，沒 ext 純號碼（電話 prefix 從 company_config 讀，v0.9.0+ P1）
-ph_phone_office = phone()["office"]
-if office_ext:
-    ph_phone_office += "#" + office_ext
+legacy_office = os.environ.get("LEGACY_OFFICE") == "1"
 
 fields = {
     "PH_NAME_CN_SURNAME": os.environ["SURNAME"],
     "PH_NAME_CN_GIVEN":   os.environ["GIVEN"],
     "PH_NAME_EN":         en,
     "PH_TITLE":           os.environ["TITLE"],
-    "PH_PHONE_OFFICE":    ph_phone_office,
     "PH_EMAIL":           os.environ["EMAIL"],
 }
+
+# 公司電話 / 分機（v0.15.x 改：公司電話固定靜態於 template，分機獨立框）
+if legacy_office:
+    # 舊無手機版 template：合成框 PH_PHONE_OFFICE（公司電話 + 分機；無分機則純號碼）
+    ph_phone_office = phone()["office"]
+    if office_ext:
+        ph_phone_office += "#" + office_ext
+    fields["PH_PHONE_OFFICE"] = ph_phone_office
+else:
+    # 新版三 template：公司電話靜態於 template，只填分機框（對照 PDF 室內分機）
+    # 有分機 → "#" + 分機（例 #375）；留白 → 寫空字串清掉模板範例值（不可不寫，否則殘留 #375）
+    fields["PH_PHONE_EXT"] = ("#" + office_ext) if office_ext else ""
 def to_card_mobile(s):
     # 名片用 +886 國碼格式：
     #   1. 空格 → dash
