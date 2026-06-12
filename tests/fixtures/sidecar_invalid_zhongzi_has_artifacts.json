@@ -1,0 +1,23 @@
+{
+  "fields": {
+    "PH_NAME_CN_SURNAME": "王",
+    "PH_NAME_CN_GIVEN": "小明",
+    "PH_NAME_EN": "Ming Wang",
+    "PH_TITLE": "產品經理",
+    "PH_PHONE_OFFICE": "+886-2-2741-7065#395",
+    "PH_EMAIL": "mingwang@neuin.com",
+    "PH_COMPANY": "中子創新有限公司"
+  },
+  "template_type": "zhongzi-bvi",
+  "company": "bvi",
+  "dest_path": "/Users/test/Documents/名片/中子/王小明_Ming Wang/20260612-王小明_Ming Wang.ai",
+  "artifacts": {
+    "surname": "王",
+    "given": "小明",
+    "en": "Ming Wang",
+    "title": "產品經理",
+    "email": "mingwang@neuin.com",
+    "folder": "/Users/test/Documents/名片/中子/王小明_Ming Wang",
+    "vcf_name": "MingWang.vcf"
+  }
+}

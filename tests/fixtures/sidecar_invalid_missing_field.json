@@ -7,6 +7,8 @@
     "PH_PHONE_OFFICE": "+886-2-2741-7065#395",
     "PH_PHONE_MOBILE": "+886-900-000-000"
   },
+  "template_type": "tw",
+  "dest_path": "/Users/test/Documents/名片/SV/王小明_Ming Wang/20260612-王小明_Ming Wang.ai",
   "artifacts": {
     "surname": "王",
     "given": "小明",
@@ -14,7 +16,7 @@
     "title": "美術設計",
     "email": "mingwang@streetvoice.com",
     "mobile": "+886 900 000 000",
-    "folder": "/Users/test/Documents/SV-名片/王小明_Ming Wang",
+    "folder": "/Users/test/Documents/名片/SV/王小明_Ming Wang",
     "vcf_name": "MingWang.vcf"
   }
 }

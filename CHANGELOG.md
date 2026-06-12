@@ -6,6 +6,23 @@
 
 ## [Unreleased]
 
+## [0.15.0] — 2026-06-12
+
+### Added
+- **測試涵蓋中子 BVI / 台灣中子版**（原本只測 TW，分支邏輯無回歸守護）：
+  - 新增 5 個 fixture：`sidecar_valid_zhongzi_bvi.json` / `_wenhua.json` / `_taiwan.json`（正面）、`sidecar_invalid_zhongzi_has_artifacts.json`（中子版誤帶 artifacts → 守跳過 vCard/QR 分支）、`sidecar_invalid_zhongzi_bvi_no_company.json`（中子 BVI 漏 company → 守分流路徑）。
+  - `tests/README.md` 補上 fixture 覆蓋對照表。
+
+### Changed
+- **`tests/sidecar_schema.json` 改為依 `template_type` 條件分支**，並對齊 v0.10.0+ 真實輸出（原 schema 已脫節）：
+  - top level 新增必填 `template_type`、`dest_path`（v0.10.0 / v0.10.3 起 `card_helper.sh init` 一律寫入，舊 schema 卻會擋掉）；新增選填 `company`；`fields` 新增選填 `PH_COMPANY`。
+  - 條件約束：`tw` 必有 `artifacts`；`zhongzi-bvi` 必有 `company` 且不可有 `artifacts`；`zhongzi-taiwan` 不可有 `artifacts`。
+  - 既有 4 個 TW fixture 同步補上 `template_type` / `dest_path`，使其忠實反映真實 sidecar；負面樣本只因各自命名的缺陷失敗。
+- **`install.sh` 新增版型模板完整性檢查**（4 個模板缺一即硬失敗中止安裝）：TW 有手機 / TW 無手機 / 中子 BVI / 台灣中子。原本安裝不檢查模板，缺失要到實際做該版型名片才會炸；改為安裝當下大聲報錯。
+
+### Fixed
+- 清除 `docs/SOP.md` Step 1.5 一個過時 TODO（`install.sh` 同步 pypdf/pdfplumber 檢查實際已於 v0.8.8 完成）。
+
 ## [0.14.1] — 2026-06-11
 
 ### Changed

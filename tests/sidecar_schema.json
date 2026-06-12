@@ -1,14 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "sv-card sidecar",
-  "description": "由 card_helper.sh init 寫入 /tmp/sv_card_fields.json 的結構規範",
+  "description": "由 card_helper.sh init 寫入 /tmp/sv_card_fields.json 的結構規範。template_type 決定分支：tw 必有 artifacts；中子系列（zhongzi-bvi / zhongzi-taiwan）無 artifacts（跳過 vCard / QR）。",
   "type": "object",
-  "required": ["fields", "artifacts"],
+  "required": ["fields", "template_type", "dest_path"],
   "additionalProperties": false,
   "properties": {
     "fields": {
       "type": "object",
-      "description": "Step 2 replace_fields.jsx 替換到 .ai 的 PH_* 欄位。PH_PHONE_MOBILE 為選填（簽呈沒填手機時 omit）",
+      "description": "Step 2 replace_fields.jsx 替換到 .ai 的 PH_* 欄位。PH_PHONE_MOBILE 為選填（簽呈沒填手機時 omit）；PH_COMPANY 僅中子 BVI 版有（動態公司名）。",
       "required": [
         "PH_NAME_CN_SURNAME",
         "PH_NAME_CN_GIVEN",
@@ -25,12 +25,28 @@
         "PH_TITLE":           {"type": "string", "minLength": 1},
         "PH_PHONE_OFFICE":    {"type": "string", "pattern": "^\\+886-2-2741-7065(#\\d+)?$"},
         "PH_PHONE_MOBILE":    {"type": "string", "pattern": "^\\+886-\\d{3}-\\d{3}-\\d{3,4}$"},
-        "PH_EMAIL":           {"type": "string", "format": "email"}
+        "PH_EMAIL":           {"type": "string", "format": "email"},
+        "PH_COMPANY":         {"type": "string", "minLength": 1, "description": "中子 BVI 版動態公司名（中子創新有限公司 / 中子文化股份有限公司）"}
       }
+    },
+    "template_type": {
+      "type": "string",
+      "enum": ["tw", "zhongzi-bvi", "zhongzi-taiwan"],
+      "description": "版型：tw（街聲，全流程）／zhongzi-bvi（中子 BVI）／zhongzi-taiwan（台灣中子）"
+    },
+    "dest_path": {
+      "type": "string",
+      "minLength": 1,
+      "description": "輸出 .ai 絕對路徑（v0.10.3+：jsx 用此繞 corrupt fullName 做顯式 saveAs）"
+    },
+    "company": {
+      "type": "string",
+      "enum": ["bvi", "wenhua"],
+      "description": "僅中子 BVI 版有：bvi（中子創新）／wenhua（中子文化），用於分流輸出路徑"
     },
     "artifacts": {
       "type": "object",
-      "description": "Step 3 make_card_artifacts.py 產 vCard + QR 的欄位。mobile 為選填（簽呈沒填手機時 omit，vCard 會跳過 TEL CELL 行）",
+      "description": "Step 3 make_card_artifacts.py 產 vCard + QR 的欄位。僅 tw 版有；mobile 為選填（簽呈沒填手機時 omit，vCard 會跳過 TEL CELL 行）。",
       "required": ["surname", "given", "en", "title", "email", "folder", "vcf_name"],
       "additionalProperties": false,
       "properties": {
@@ -44,5 +60,22 @@
         "vcf_name": {"type": "string", "pattern": "^[A-Za-z]+\\.vcf$", "description": "無空格英文名 + .vcf"}
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "description": "tw 版必有 artifacts（產 vCard + QR）",
+      "if":   {"required": ["template_type"], "properties": {"template_type": {"const": "tw"}}},
+      "then": {"required": ["artifacts"]}
+    },
+    {
+      "description": "中子 BVI 版必有 company，且不可有 artifacts（跳過 vCard / QR）",
+      "if":   {"required": ["template_type"], "properties": {"template_type": {"const": "zhongzi-bvi"}}},
+      "then": {"required": ["company"], "not": {"required": ["artifacts"]}}
+    },
+    {
+      "description": "台灣中子版單一公司、無 company，且不可有 artifacts",
+      "if":   {"required": ["template_type"], "properties": {"template_type": {"const": "zhongzi-taiwan"}}},
+      "then": {"not": {"required": ["artifacts"]}}
+    }
+  ]
 }

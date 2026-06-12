@@ -1,0 +1,13 @@
+{
+  "fields": {
+    "PH_NAME_CN_SURNAME": "徐",
+    "PH_NAME_CN_GIVEN": "樂天",
+    "PH_NAME_EN": "Chi Liu",
+    "PH_TITLE": "工程師",
+    "PH_PHONE_OFFICE": "+886-2-2741-7065#601",
+    "PH_PHONE_MOBILE": "+886-909-050-269",
+    "PH_EMAIL": "letian@neuin.com"
+  },
+  "template_type": "zhongzi-taiwan",
+  "dest_path": "/Users/test/Documents/名片/台灣中子/劉琪琪_Chi Liu/20260612-劉琪琪_Chi Liu.ai"
+}

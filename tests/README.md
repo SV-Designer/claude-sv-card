@@ -50,6 +50,20 @@ pip3 install jsonschema
 - `sidecar_valid.json`、`sidecar_valid_*.json` — 應該通過 schema
 - `sidecar_invalid_*.json` — 應該被 schema 抓到（負面樣本，檔名含 `_invalid_` 就會自動被 `validate_sidecar.py` 視為負面樣本）
 
+目前覆蓋（`sidecar_schema.json` 依 `template_type` 條件分支）：
+
+| fixture | 守的東西 |
+|---|---|
+| `sidecar_valid.json` / `sidecar_valid_no_mobile.json` | TW 街聲版（有 / 無手機），必有 `artifacts` |
+| `sidecar_valid_zhongzi_bvi.json` / `_wenhua.json` | 中子 BVI 版，必有 `company`、`PH_COMPANY`，無 `artifacts` |
+| `sidecar_valid_zhongzi_taiwan.json` | 台灣中子版，無 `company`、無 `artifacts` |
+| `sidecar_invalid_missing_field.json` | 缺 `PH_EMAIL` 必填欄位 |
+| `sidecar_invalid_bad_phone.json` | `PH_PHONE_OFFICE` 格式錯 |
+| `sidecar_invalid_zhongzi_has_artifacts.json` | 中子版**不該有** `artifacts`（守跳過 vCard/QR 的分支回歸）|
+| `sidecar_invalid_zhongzi_bvi_no_company.json` | 中子 BVI 版漏 `company`（守分流路徑回歸）|
+
+> 負面樣本要「只因命名的那個缺陷失敗」—— 加新負面 fixture 時，其餘欄位請保持合法（含 `template_type` / `dest_path`），別讓它因無關原因失敗而失焦。
+
 ### 加新檢查 phase
 
 編輯 `tests/smoke.sh`，照既有 `# ─── Phase N` 模式加。如果新檢查依賴某套件，**讓它「未安裝就跳過」**（warn 不 fail），這樣本地裸機跑也不會擋人。

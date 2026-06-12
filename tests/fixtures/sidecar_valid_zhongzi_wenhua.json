@@ -1,0 +1,14 @@
+{
+  "fields": {
+    "PH_NAME_CN_SURNAME": "王",
+    "PH_NAME_CN_GIVEN": "小明",
+    "PH_NAME_EN": "Ming Wang",
+    "PH_TITLE": "行銷企劃",
+    "PH_PHONE_OFFICE": "+886-2-2741-7065",
+    "PH_EMAIL": "mingwang@neuin.com",
+    "PH_COMPANY": "中子文化股份有限公司"
+  },
+  "template_type": "zhongzi-bvi",
+  "company": "wenhua",
+  "dest_path": "/Users/test/Documents/名片/中子文化/王小明_Ming Wang/20260612-王小明_Ming Wang.ai"
+}

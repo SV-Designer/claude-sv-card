@@ -178,6 +178,31 @@ link_into_skill "$REPO_DIR/templates"        "templates"
 link_into_skill "$REPO_DIR/docs"             "docs"
 echo
 
+# ─── 2.5 模板完整性檢查 ────────────────────────────────────────
+# 各版型模板缺一不可（缺失 = 該版型做到一半才會炸，故在安裝當下就硬失敗）。
+# 檔名須與 scripts/card_helper.sh 的 SV_TEMPLATE* 預設一致。
+echo "🗂️  檢查版型模板..."
+tpl_missing=0
+for tpl in \
+    "20260522-王小明.ai|TW 街聲（有手機，預設）" \
+    "20260529-王小明_無手機版.ai|TW 街聲（無手機）" \
+    "20260609-王小明_中子BVI.ai|中子 BVI" \
+    "20260611-王小明_台灣中子.ai|台灣中子"; do
+    fname="${tpl%%|*}"
+    label="${tpl##*|}"
+    if [ -f "$REPO_DIR/templates/$fname" ]; then
+        echo "  ✅ $label：$fname"
+    else
+        echo "  ❌ $label 模板缺失：templates/$fname" >&2
+        tpl_missing=1
+    fi
+done
+if [ "$tpl_missing" = "1" ]; then
+    echo "  💥 有版型模板缺失，安裝中止。請確認 repo 完整 checkout（git status / git lfs pull）後重跑。" >&2
+    exit 1
+fi
+echo
+
 # ─── 3. 寫入使用者偏好 ─────────────────────────────────────────
 echo "⚙️  寫入使用者偏好 $CONFIG_FILE ..."
 mkdir -p "$CONFIG_DIR"
