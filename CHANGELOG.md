@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [0.19.2] — 2026-06-22
+
+### Changed
+- **範例手機號碼全 repo 統一為 `0909-050-269`**：經典款模板背面 `PH_PHONE_MOBILE_B`（`+886-922-280-112` → `+886-909-050-269`）、文件/程式示意號碼 13 行 / 6 檔，各保留原格式。
+- **全 repo 現行檔案去識別化**：所有現行檔案（`CHANGELOG.md`、`docs/SOP.md`、`skill/SKILL.md`、`README.md`、`scripts/card_helper.sh`、`tests/*`）中的真實人名一律改為化名、FTP 管理員聯絡人改為「產品工程部」、真實手機號碼範例統一為 `0909-050-269`；範例假名（王小明 / Ming Wang）與帳號 `owner`（屬設計動機脈絡，刻意保留）未動。**舊 commit 的真實資料另以 v0.19.2 後的 git history rewrite 清除。**
+
 ## [0.19.1] — 2026-06-22
 
 ### Changed

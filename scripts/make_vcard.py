@@ -144,7 +144,7 @@ if __name__ == "__main__":
         "english_name": "阿明 Ming Wang",
         "title": "美術設計",
         "email": "mingwang@streetvoice.com",
-        "mobile": "0900-000-000",
+        "mobile": "0909-050-269",
     }
     output_path = Path("/tmp/MingWang.vcf")
     output_path.parent.mkdir(parents=True, exist_ok=True)

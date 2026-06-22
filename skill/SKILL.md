@@ -134,7 +134,7 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
     --surname "<中文姓>" --given "<中文名>" \
     --title "<職稱>" \
     --email "<email>" \
-    --mobile "<簽呈原格式手機，例如 +886 900 000 000>" \
+    --mobile "<簽呈原格式手機，例如 +886 909 050 269>" \
     --office-ext "<分機，例如 395>" \
     --template-type "<tw / zhongzi-bvi / zhongzi-taiwan，預設 tw>" \
     --company "<bvi 或 wenhua，僅 zhongzi-bvi 必填；zhongzi-taiwan 不傳>"

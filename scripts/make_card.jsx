@@ -1,7 +1,7 @@
 // StreetVoice 名片產生器
 // 透過設定 global var CARD_DATA = {...} 後再 evalFile 執行
 // 例:
-//   $.global.CARD_DATA = { chineseName: "王小明", englishName: "阿明 Ming Wang", title: "美術設計", extension: "#XXX", mobile: "0900-000-000", email: "mingwang@streetvoice.com" };
+//   $.global.CARD_DATA = { chineseName: "王小明", englishName: "阿明 Ming Wang", title: "美術設計", extension: "#XXX", mobile: "0909-050-269", email: "mingwang@streetvoice.com" };
 //   $.evalFile(Folder("~").fsName + "/.claude/skills/sv-card/scripts/make_card.jsx");
 
 (function() {
@@ -9,7 +9,7 @@
     var data = $.global.CARD_DATA;
     if (!data) { return "ERROR: CARD_DATA not set"; }
 
-    // 將手機 0900-000-000 / 0900000000 → +886-900-000-000
+    // 將手機 0909-050-269 / 0909050269 → +886-909-050-269
     function fmtMobile(m) {
         var n = "";
         for (var i = 0; i < m.length; i++) {

@@ -12,7 +12,7 @@ SV 名片產生流程的「資料層」：vCard + QR Code SVG + 預處理 SVG
   B. 命名參數模式（向後相容）：
        python3 make_card_artifacts.py \\
            --surname "王" --given "小明" --en "Ming Wang" \\
-           --title "美術設計" --email "..." --mobile "+886 900 000 000" \\
+           --title "美術設計" --email "..." --mobile "+886 909 050 269" \\
            --folder "..." --vcf-name "MingWang.vcf"
 
 執行內容（只做這三件事,不會碰其他位置）：
@@ -49,7 +49,7 @@ def main():
     p.add_argument("--en", help="英文名(含 alias),例如「Ming Wang」或「阿明 Ming Wang」")
     p.add_argument("--title", help="職稱")
     p.add_argument("--email")
-    p.add_argument("--mobile", help="沿用簽呈原格式,例如「+886 900 000 000」或「0900-000-000」")
+    p.add_argument("--mobile", help="沿用簽呈原格式,例如「+886 909 050 269」或「0909-050-269」")
     p.add_argument("--folder", type=Path, help="輸出資料夾(必須已存在)")
     p.add_argument("--vcf-name", help="vCard 檔名,例如「MingWang.vcf」(無空格英文名 + .vcf)")
     args = p.parse_args()
