@@ -83,7 +83,7 @@ SV_TEMPLATE_ZHONGZI_TAIWAN="${SV_TEMPLATE_ZHONGZI_TAIWAN:-$SV_CARD_SKILL_DIR/tem
 SV_OUTPUT_BASE_ZHONGZI_TAIWAN="${SV_OUTPUT_BASE_ZHONGZI_TAIWAN:-$SV_OUTPUT_BASE/台灣中子}"
 # 經典復刻款 BVI（v0.19.0+，半自動：自動填值，配色 + 收尾留人工）。雙面卡、專屬框集（含 _F/_B）。
 # 輸出沿用中子分流（bvi→中子 / wenhua→中子文化 / taiwan→台灣中子）。
-SV_TEMPLATE_CLASSIC="${SV_TEMPLATE_CLASSIC:-$SV_CARD_SKILL_DIR/templates/20260622-名片模版_經典款.ai}"
+SV_TEMPLATE_CLASSIC="${SV_TEMPLATE_CLASSIC:-$SV_CARD_SKILL_DIR/templates/20260622-名片模版_經典復刻款.ai}"
 SV_SIDECAR="${SV_SIDECAR:-/tmp/sv_card_fields.json}"
 
 # 預設模板（TW 有手機版）防呆（v0.16.2）：env 覆寫成不存在的舊檔名時（例如換模板
