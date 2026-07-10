@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [0.20.1] — 2026-07-10
+
+### Changed
+- **SKILL.md 瘦身 317 → 149 行**：skill 稽核發現每次觸發都載入大量歷史包袱——39 處版本演進註記（v0.8.1～v0.18.0）與細節表格混在執行骨架裡。此版把版本註記全數改寫成現行事實（演進史歸本 CHANGELOG），大塊細節逐字搬到 `docs/`：`pdf-extract.md`（PDF 欄位對照＋Claude 必看項）、`branch-neutron.md`（中子分支詳解）、`upload-vcard.md`（Step 9 完整 9a–9d）、`first-run.md`（Step 0 首次確認）。**流程行為零變更**：11 個步驟、兩個 GATE、三句逐字提示全數保留。
+- frontmatter description 同步精簡（移除版本史），降低每個 session 的載入成本。
+
 ## [0.20.0] — 2026-07-10
 
 ### Changed

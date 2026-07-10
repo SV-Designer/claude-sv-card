@@ -1,36 +1,31 @@
 ---
 name: sv-card
-description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI 版 + 台灣中子版，v0.10.0+）。觸發詞：「做名片」（附簽呈 PDF，拖入或路徑）。版型一律依簽呈「名片版型」欄位（template_type）自動判斷：「TW 街聲」→ TW 全流程；「中子BVI」/「台灣中子」→ 中子分支，跳過 vCard / QR / 上傳；非上述三種（CN / EN）→ 停下問（未支援）。目前所有支援版型（TW 街聲、中子 BVI、台灣中子）皆已納入自動化白名單（v0.14.0），全自動同 TW、僅 Step 6 GATE 需確認。**未來新增版型**仍依 SOP「🆕 新版型測試 → 畢業規則」節：初期每步驟先停下確認，成功跑 ≥ 2 次後才討論加入白名單。
+description: StreetVoice 街聲名片自動化製作（TW 街聲版＋中子 BVI 版＋台灣中子版）。觸發詞：「做名片」（附簽呈 PDF，拖入或路徑）。版型依簽呈「名片版型」欄位自動判斷：「TW 街聲」→ TW 全流程；「中子BVI」/「台灣中子」→ 中子分支（跳過 vCard / QR / 上傳）；非上述三種或未支援的新版型 → 停下與使用者確認。
 ---
 
 # SV 名片自動化製作
 
-> 本 skill 是 SOP 的「執行手冊」精簡版。完整原理、已知問題、設計理由見 [`SOP.md`](~/.claude/skills/sv-card/docs/SOP.md)
->
-> **首次使用前必須跑 `install.sh`**（在 repo 根目錄）。腳本會建 symlink、檢查依賴、寫入使用者偏好設定。
+> 本 skill 是 SOP 的「執行手冊」精簡版。完整原理、已知問題、設計理由見 [`SOP.md`](~/.claude/skills/sv-card/docs/SOP.md)。**首次使用前必須跑 `install.sh`**（在 repo 根目錄）：建 symlink、檢查依賴、寫入使用者偏好設定。
 
 ## 🎯 觸發 + 版型路由
 
-使用者說「**做名片**」+ 提供簽呈 PDF 即觸發。**版型一律依簽呈欄位判斷，不靠觸發語指定。**
-
-**版型決策（單一來源：簽呈欄位）**：
+使用者說「**做名片**」+ 提供簽呈 PDF 即觸發。**版型一律依簽呈欄位判斷，不靠觸發語指定。** 版型決策（單一來源：簽呈欄位）：
 1. 照下方「PDF 萃取規則」讀簽呈「名片版型」欄位（`template_type`）拿到版型
 2. 依版型分流：
    - 「TW 街聲」→ TW 全流程
-   - 「中子BVI」/「台灣中子」→ 中子分支（跳過 vCard / QR / 上傳）
+   - 「中子BVI」/「台灣中子」→ 中子分支（跳過 vCard / QR / 上傳）→ 細節見 [`docs/branch-neutron.md`](~/.claude/skills/sv-card/docs/branch-neutron.md)
    - 非上述三種（CN / EN）→ 🛑 **停下問使用者**（未支援）
+
+目前三種支援版型皆已納入自動化白名單：全自動、僅 Step 6 GATE 需確認。**未來新增版型**依 SOP「🆕 新版型測試 → 畢業規則」節：初期每步驟先停下確認，成功跑 ≥ 2 次後才討論加入白名單。
 
 ## 📜 第一句話（逐字、不要改寫）
 
-收到觸發後，第一句**必須逐字**回覆：
+收到觸發後，第一句**必須逐字**回覆（說完**不等使用者確認**，立即執行下方流程）：
 
 > **好的，準備開始！請完全關閉 illustrator (⌘Q)**
 
-說完**不等使用者確認**，立即執行下方流程。
+## 📋 PDF 萃取規則（雙重檢核）
 
-## 📋 PDF 萃取規則（雙重檢核，v0.8.6+）
-
-**流程**：
 1. Claude 用 Read tool 讀 PDF（**保留人類視覺判斷** — 抓 typo、特殊備註、簽呈格式異常）
 2. 跑 `card_helper.sh extract-pdf <pdf-path>` 拿機械萃取 JSON
 3. **比對 Claude 自己萃取結果 vs 腳本 JSON**：
@@ -38,131 +33,49 @@ description: StreetVoice 街聲名片自動化製作（TW 街聲版 + 中子 BVI
    - 任一欄位不一致 / Claude 看出 typo / 特殊備註 → **停下與使用者確認**
 4. 確認後執行 Step 1 init
 
-**腳本 JSON 欄位**（`scripts/extract_signoff_fields.py`）：
-
-| JSON key | 用途 / 對 init 參數的對應 |
-|---|---|
-| `form_no` | 表單號（→ Step 1.5 簽呈備份檔名）|
-| `surname_cn` / `given_cn` | 中文姓名拆分（→ `--surname` / `--given`，含 18 個常見複姓判斷）|
-| `card_name_cn` | 中文全名去員編（→ `--chinese`）|
-| `english_name_no_alias` | 英文名去 alias（→ `--english`，alias 偵測：首 token 含中文字 = alias）|
-| `english_alias` | 中文 alias（如「阿明 Ming Wang」→ `阿明`）|
-| `title` | 職稱（→ `--title`）|
-| `email` | Email（→ `--email`）|
-| `office_ext` | 分機（→ `--office-ext`，null = 簽呈空白，傳 `""`）|
-| `mobile` | 簽呈原格式手機（→ `--mobile`，null = 簽呈空白，傳 `""`）|
-| `template_type` | 版型（v0.10.0+：「TW 街聲」→ `--template-type tw`；「中子BVI」→ `--template-type zhongzi-bvi`；「台灣中子」→ `--template-type zhongzi-taiwan`（v0.12.0+）；其餘版型停下問）|
-| `other_requests` | 「其他需求」欄位純文字（通常空白；有特殊備註才停下確認）|
-| `form_remark` + `form_remark_is_placeholder` | 「表單註釋」欄位文字 — **內容可完全忽略**，不作為停下判斷（腳本仍抽出但不採用）|
-
-**Claude 必看項**（腳本抓不到的判斷）：
-- **機械萃取全 null（關鍵欄位全抓不到）**（v0.16.2）→ 中子系列 PDF 中文 layer 圖片化（CID 編碼）常見，`extract-pdf` 會印 `⚠️` 警告。此時**以 Claude 視覺萃取（Read PDF）為準、逐欄與使用者人工確認**（失去機械雙重檢核），不可照單全收直接跑。
-- **中英文 typo**：腳本照字面抓（如 `Strong Wo` 會原樣輸出），Claude 看 PDF 視覺判斷是否為 typo → 停下問
-- **「其他需求」欄位通常為空白**；若有「請協助送印」「TW」以外的特殊備註 → 停下問
-- **「表單註釋」欄位內容可完全忽略** —— 不論 placeholder 與否，皆不作為停下判斷
-- **`template_type == "中子BVI"`**（v0.10.0+）→ 走中子分支（傳 `--template-type zhongzi-bvi --company bvi|wenhua`），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**已通過測試納入自動化白名單（v0.14.0）**：流程同 TW 全自動，僅 Step 6 GATE 需確認。**`--company` 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`**。輸出路徑分流（v0.10.3+ 預設）：bvi → `~/Documents/名片/中子`；wenhua → `~/Documents/名片/中子文化`（可用 `SV_OUTPUT_BASE_ZHONGZI` / `SV_OUTPUT_BASE_ZHONGZI_WENHUA` 在 `~/.config/sv-card/env` 覆寫）
-- **`template_type == "台灣中子"`**（v0.12.0+）→ 走台灣中子分支（傳 `--template-type zhongzi-taiwan`，**不需 `--company`**），跳過 Step 3 artifacts、Step 4 place QR、Step 9 upload vCard；**已通過 2 次測試納入自動化白名單（v0.14.0）**：流程同 TW 全自動，**僅 Step 6 GATE 需確認**，不再每步停下。台灣中子是中子創新旗下台灣子公司，**單一公司、公司名「台灣中子創新股份有限公司」靜態寫死於模板**（無 PH_COMPANY，毋須推導）；員工 email 同為 `@neuin.com`。輸出路徑：`~/Documents/名片/台灣中子`（可用 `SV_OUTPUT_BASE_ZHONGZI_TAIWAN` 在 `~/.config/sv-card/env` 覆寫）
-- **`template_type` 非「TW 街聲」、「中子BVI」、「台灣中子」**（CN / EN）→ 停下問（未支援）
-- **「名片上的姓名」與「申請人」不同**（外部夥伴情境）→ 雖然腳本仍能抽，但要跟使用者確認此為預期
-- **職稱中英文混填**（如「事業發展總監（英文: Business Development Director）」，v0.10.1+）→ **停下問使用者用中文還是英文**，再決定 `--title` 傳哪個值
-- **Email 網域白名單**（v0.10.1+）：`@streetvoice.com`（TW 員工）、`@neuin.com`（中子員工）皆視為正常；其他網域 → 停下問
+腳本 JSON 欄位對照表＋「Claude 必看項」（機械萃取全 null、typo、alias、company 推導、Email 白名單等停下判斷）→ 詳見 [`docs/pdf-extract.md`](~/.claude/skills/sv-card/docs/pdf-extract.md)
 
 ## 🚧 非常規簽呈 → 停下問
 
 依 SOP「🆕 新版型測試 → 畢業規則」（新款逐步確認），遇以下狀況**不要照走自動流程**，先停下問使用者：
 - 「其他需求」/ 備註欄出現**過去未碰過的特殊請求**（覆寫姓名、改地址、改 logo、特殊版型等）
-- Email 非 `@streetvoice.com` 也非 `@neuin.com`（v0.10.1+：白名單已含中子員工域名）
+- Email 非 `@streetvoice.com` 也非 `@neuin.com`（白名單已含中子員工域名）
 - 版型非「TW 街聲」、「中子BVI」、「台灣中子」（CN / EN 版尚未支援）
-- 職稱中英混填（v0.10.1+，例：「事業發展總監（英文: ...）」）
+- 職稱中英混填（例：「事業發展總監（英文: ...）」）
 
 > 已自動處理的分支（不再屬於非常規）：簽呈無分機 → `--office-ext ""`；簽呈無手機 → `--mobile ""`。
 
 ## 🔁 執行流程（全自動，僅 Step 0 首次 + Step 6 GATE 需詢問）
 
 > 💡 **Illustrator dock 跳動提示**：執行 Step 2 / 4 / 7（含 `$.evalFile(.../jsx)` 的 mcp call）時，BridgeTalk 會讓 Illustrator dock 圖示跳動但不強制搶焦點 — macOS 對背景 GUI app 有 throttle，需使用者點一下 dock 才會繼續。
->
 > **⚠️ 時機關鍵**：請在「送出 mcp call **之前**」（也就是 Claude Code UI 即將顯示 `Called illustrator` 之前）就先用文字提示使用者（**逐字**）：**📌 點進 Illustrator 並切回這裡，以便繼續！**。如果放在 mcp call 之後印，使用者在等 throttle 解除的這段時間看不到提示，會以為流程卡住。
 
 ### Step 0：首次製作 — 確認名片存放路徑（僅首次跑）
 
-在 Step 1 前，先檢查是否需要走首次流程：
-
-```bash
-~/.claude/skills/sv-card/scripts/card_helper.sh check-firstrun
-```
-
-- 印 `skip-step0` → 直接跳到 Step 1
-- 印 `run-step0` → 執行下列首次確認流程：
-
-**a. 用以下精簡訊息問使用者**（不要加贅字）：
-
-```
-首次製作名片請先確認：
-① 名片製作檔存放路徑（根目錄）：
-　A. ~/Documents/名片（預設）
-　B. 自訂（請輸入完整路徑）
-② 以後都存同路徑？
-```
-
-> v0.14.0+：這裡確認的是**名片根目錄**（所有版型的共同上層），不是 `SV` 子夾。TW 街聲版做的時候才會在根目錄下自動建 `SV/`，中子各版自動建 `中子` / `中子文化` / `台灣中子` 子夾。
-
-**b. 收到回答後，呼叫子命令**（自動 mkdir + open Finder + 寫 env 含 `SV_OUTPUT_CONFIRMED=1`）：
-
-```bash
-# 選 A 或回 "OK"
-~/.claude/skills/sv-card/scripts/card_helper.sh confirm-firstrun "~/Documents/名片"
-# 選 B
-~/.claude/skills/sv-card/scripts/card_helper.sh confirm-firstrun "<使用者輸入路徑>"
-```
-
-**c. 告訴使用者**：「資料夾已建立並開啟給您看。以後做名片都會存到這裡，可隨時編輯 `~/.config/sv-card/env` 改設定。」
-
-然後繼續 Step 1。
+先跑 `~/.claude/skills/sv-card/scripts/card_helper.sh check-firstrun`：印 `skip-step0` → 直接跳 Step 1；印 `run-step0` → 🛑 停下用精簡訊息問使用者名片根目錄（a 問句模板、b `confirm-firstrun` 用法、c 回覆句 → **逐字照** [`docs/first-run.md`](~/.claude/skills/sv-card/docs/first-run.md) 執行），完成後繼續 Step 1。
 
 ### Step 1：填入所有欄位 + 建資料夾 + 開檔 + 寫 sidecar
 ```bash
 ~/.claude/skills/sv-card/scripts/card_helper.sh init \
     --chinese "<中文全名>" --english "<英文名去alias>" \
     --surname "<中文姓>" --given "<中文名>" \
-    --title "<職稱>" \
-    --email "<email>" \
+    --title "<職稱>" --email "<email>" \
     --mobile "<簽呈原格式手機，例如 +886 909 050 269>" \
     --office-ext "<分機，例如 395>" \
     --template-type "<tw / zhongzi-bvi / zhongzi-taiwan，預設 tw>" \
     --company "<bvi 或 wenhua，僅 zhongzi-bvi 必填；zhongzi-taiwan 不傳>"
 ```
-> **`--mobile` / `--office-ext` 為選填**：簽呈空白時傳空字串 `""`（或不傳）。
-> - `--mobile ""` → 自動選無手機版模板（SV_TEMPLATE_NO_MOBILE）、vCard 跳過 TEL CELL
-> - `--office-ext ""` → 新版分機框 `PH_PHONE_EXT` 留空（公司電話 `+886-2-2741-7065` 靜態於模板）；無手機版仍走舊 `PH_PHONE_OFFICE`
->
-> **`--template-type` 為選填**（v0.10.0+，預設 `tw`）：
-> - `tw`（預設）→ SV 全流程，含 vCard / QR / 上傳
-> - `zhongzi-bvi` → 中子 BVI 版（簽呈版型「中子BVI」），用 `SV_TEMPLATE_ZHONGZI` 模板；sidecar 不寫 artifacts 區塊，Step 3 / 4 / 9 自動跳過
-> - `zhongzi-taiwan` → 台灣中子版（簽呈版型「台灣中子」，v0.12.0+），用 `SV_TEMPLATE_ZHONGZI_TAIWAN` 模板；**不傳 `--company`**；輸出至 `$SV_OUTPUT_BASE_ZHONGZI_TAIWAN`（預設 `~/Documents/名片/台灣中子`）；公司名「台灣中子創新股份有限公司」靜態於模板（無 PH_COMPANY）；同中子 BVI 跳過 Step 3 / 4 / 9
->
-> **`--company` 僅 `--template-type zhongzi-bvi` 時必填**（v0.10.1+；`zhongzi-taiwan` 單一公司不需 company）：
-> - `bvi` → 中子創新（BVI）員工，輸出至 `$SV_OUTPUT_BASE_ZHONGZI`（v0.10.3+ 預設 `~/Documents/名片/中子`），名片印「中子創新有限公司」
-> - `wenhua` → 中子文化股份有限公司員工，輸出至 `$SV_OUTPUT_BASE_ZHONGZI_WENHUA`（v0.10.3+ 預設 `~/Documents/名片/中子文化`），名片印「中子文化股份有限公司」
-> - 依簽呈「公司」欄位推導：「中子創新（BVI）」→ `bvi`；「中子文化股份有限公司」→ `wenhua`
-> - **`PH_COMPANY` 文字框會被自動替換**（v0.10.2+）：bvi → `中子創新有限公司`；wenhua → `中子文化股份有限公司`
->
-> init 內部推導：名片用 `PH_PHONE_MOBILE`（空格→dash、開頭 `0` → `+886-`，v0.8.4+）、vCard `mobile`（沿用簽呈原格式）、`vcf-name`（英文名去空格+.vcf）、`PH_PHONE_EXT`（`#`+分機，新版三 template；無手機版改 `PH_PHONE_OFFICE` 合成框）。
-> 資料寫入 `/tmp/sv_card_fields.json` sidecar，Step 2/3 自動讀取。腳本印出 `BASENAME=...` 和 `DEST_DIR=...` 給 Step 8 收尾用。
+> **`--mobile` / `--office-ext` 為選填**：簽呈空白時傳空字串 `""`（或不傳）。`--mobile ""` → 自動選無手機版模板（SV_TEMPLATE_NO_MOBILE）、vCard 跳過 TEL CELL；`--office-ext ""` → 新版分機框 `PH_PHONE_EXT` 留空（公司電話 `+886-2-2741-7065` 靜態於模板）；無手機版仍走舊 `PH_PHONE_OFFICE`。
+> **`--template-type` / `--company` 詳解（中子分支）**→ 見 [`docs/branch-neutron.md`](~/.claude/skills/sv-card/docs/branch-neutron.md)
+> init 內部推導：名片用 `PH_PHONE_MOBILE`（空格→dash、開頭 `0` → `+886-`）、vCard `mobile`（沿用簽呈原格式）、`vcf-name`（英文名去空格+.vcf）、`PH_PHONE_EXT`（`#`+分機；無手機版改 `PH_PHONE_OFFICE` 合成框）。資料寫入 `/tmp/sv_card_fields.json` sidecar，Step 2/3 自動讀取。腳本印出 `BASENAME=...` 和 `DEST_DIR=...` 給 Step 8 收尾用。
 
-> 🛑 **若 init 輸出含 `NEEDS_MCP_OPEN=1`**（v0.16.1+）：表示 Illustrator 已運行、`open` 被既有文件攔截，**current document 不是目標檔**（直接替換會改錯文件）。此時**在 Step 2 之前先用 MCP 強制開啟目標檔**（`open -a` / `osascript open` 在背景 throttle 下無效，只有 MCP `app.open` 會 bringToFront 可靠生效）：
-> ```javascript
-> // 目標檔路徑 = <DEST_DIR>/<BASENAME>.ai（init 已印出），或 sidecar 的 dest_path
-> app.open(new File("<DEST_DIR>/<BASENAME>.ai"));
-> app.activeDocument.name;  // 須回 <BASENAME>.ai 才算成功
-> ```
-> 確認 `activeDocument.name == 目標檔名` 後再往下。**未確認前絕不執行 Step 2 replace**。
+> 🛑 **若 init 輸出含 `NEEDS_MCP_OPEN=1`**：表示 Illustrator 已運行、`open` 被既有文件攔截，**current document 不是目標檔**（直接替換會改錯文件）。此時在 Step 2 之前先用 MCP 強制開啟目標檔（只有 MCP `app.open` 會 bringToFront 可靠生效）：`app.open(new File("<DEST_DIR>/<BASENAME>.ai"));` 並確認 `app.activeDocument.name` 回 `<BASENAME>.ai`。**未確認前絕不執行 Step 2 replace**。
 
-### Step 1.5：備份簽呈 PDF（v0.8.5+）
+### Step 1.5：備份簽呈 PDF
 ```bash
 ~/.claude/skills/sv-card/scripts/card_helper.sh backup-pdf "<簽呈 PDF 原始路徑>" "$DEST_DIR" [<form-no>]
 ```
-> 把使用者上傳的簽呈 PDF 備份到製作檔資料夾，命名為 `簽呈編號-{表單號}.pdf`。
-> v0.10.3+：固定**保留上方 352px**（取代原本「找『表單註釋』word top - 1pt」動態邏輯）。原因：中子版 PDF 中文 layer 圖片化（CID 編碼），pdfplumber 抓不到「表單註釋」word，改用固定值對 TW + 中子 + 未來新版型一致。
+> 把簽呈 PDF 備份到製作檔資料夾，命名 `簽呈編號-{表單號}.pdf`，固定**保留上方 352px**（中子版 PDF 中文 layer 圖片化、pdfplumber 抓不到「表單註釋」word，固定值對所有版型一致）。
 > 表單號取得：CLI 第三參數 `<form-no>` > pdfplumber 抓「表單號:」regex > 報錯。**中子 PDF 必傳 `<form-no>`**（Claude 視覺判斷後 echo 進命令）；TW 可省略，腳本自動 regex 抓。
 
 ### Step 2：替換 7 欄位 + 自動存檔（mcp__illustrator__run）
@@ -175,22 +88,16 @@ $.evalFile(Folder("~").fsName + "/.claude/skills/sv-card/scripts/replace_fields.
 ```bash
 ~/.claude/skills/sv-card/scripts/card_helper.sh artifacts
 ```
-> 自動讀 sidecar 的 artifacts 區塊（無參數）。
->
-> **中子系列（v0.10.0+；v0.12.0+ 含台灣中子）**：腳本偵測 sidecar `template_type != "tw"`（即 zhongzi-bvi / zhongzi-taiwan）會印「📋 中子系列跳過 artifacts（無 vCard / QR）」並 exit 0。**Step 4（置入 QR）也整個跳過**，直接進 Step 5 自動存檔。
+> 自動讀 sidecar 的 artifacts 區塊（無參數）。**中子系列**：腳本偵測 `template_type != "tw"` 印「📋 中子系列跳過 artifacts」並 exit 0，**Step 4 也整個跳過**，直接進 Step 5。
 
 ### Step 4：置入 QR Code（mcp__illustrator__run）
 ```javascript
 $.global.QR_OPTS = { svgPath: "/tmp/qr_processed.svg", sizeCm: 1.4, cmykBlack: 88 };
-// Folder("~") 展開為家目錄，跨機器通用
 $.evalFile(Folder("~").fsName + "/.claude/skills/sv-card/scripts/place_qr.jsx");
 ```
-> **中子版（v0.10.0+）**：整個跳過（範本本身沒有 QR 區塊）。直接進 Step 5。
+> **中子系列**：整個跳過（範本本身沒有 QR 區塊），直接進 Step 5。
 
-### Step 5：自動存檔（mcp__illustrator__run）
-```javascript
-app.activeDocument.save();
-```
+### Step 5：自動存檔（mcp__illustrator__run）：`app.activeDocument.save();`
 
 ### Step 6：🛑 GATE — 問使用者「請確認資訊無誤」
 
@@ -208,88 +115,18 @@ $.evalFile(Folder("~").fsName + "/.claude/skills/sv-card/scripts/finalize.jsx");
 ```
 （finalize 內部：mv original + sips JPG + mv OL + `ls -la` 列 5 個交付檔）
 
-### Step 9：上傳 vCard 到 drive.streetvoice.com/vcard/
+### Step 9：上傳 vCard 到 drive.streetvoice.com/vcard/（**中子版整段跳過**）
 
-> **中子版（v0.10.0+）**：整段跳過（沒產 vCard 就不用上傳）。Step 8 收尾後流程結束。
-
-**9a. 預查 server 是否已有同名檔（必跑）**
-```bash
-~/.claude/skills/sv-card/scripts/card_helper.sh upload-vcard --check-only "$DEST_DIR/<無空格英文名>.vcf"
-```
-腳本走「拿密碼 + preflight + curl --list-only」流程，不上傳。最後一行印：
-- `exists` → 進 **9b GATE**
-- `new` → 跳到 **9c 直接上傳**
-- 異常（找不到 favorite / 密碼錯）→ 同 9c 處理，由 upload 內邏輯接管
-
-**9b. 🛑 GATE — 偵測到重複時詢問**（僅 `exists` 觸發）
-
-Claude 用此句問使用者（**逐字**，把實際檔名代入）：
-
-> **`<無空格英文名>.vcf` 偵測到相同檔案，請問是否覆蓋？**
-
-- 使用者回 OK / 是 / 覆蓋 → 進 9c
-- 使用者回否定 → 跳過 Step 9（vcf 仍在本地 `$DEST_DIR/`，未來可手動跑上傳）
-
-**9c. 上傳（含 v0.8.1+ retry 邏輯）**
-```bash
-~/.claude/skills/sv-card/scripts/card_helper.sh upload-vcard "$DEST_DIR/<無空格英文名>.vcf"
-```
-
-> **內部流程（v0.8.1+）**：
-> 1. 取得密碼：Keychain 有就用；沒有 → 跳 dialog 要密碼 → 存 Keychain
-> 2. **preflight 登入檢查**（curl --list-only noop）
->    - 失敗 → 自動刪 Keychain 密碼 + 跳 dialog 重輸 → 再 preflight 一次
->    - 仍失敗 → 印「請洽產品工程部」+ exit 1
-> 3. **STOR + retry 一次**：第一次 STOR 失敗 sleep 1 秒再試（ProFTPD 偶有 transient 550，retry 幾乎都會 work）
-
-**9c 結果分支**：
-
-| 印出 | Claude 轉達 |
-|---|---|
-| `✅ vCard 已上傳 server [並覆蓋舊檔]` + URL | 「✅ vCard 已上傳並驗證成功」+ URL（建議續跑 9d 驗證確認 server 端沒被別人覆蓋回去）|
-| `❌ 登入仍失敗` | 「❌ 登入失敗，請洽產品工程部協助確認帳號權限」|
-| `❌ STOR 兩次都失敗` | **「❌ 上傳失敗（[Claude 評估當下可能原因]），手動上傳 vcard 至 transmit 覆蓋舊檔。完成後告知我，我會驗證 server」** → 等使用者完成後進 9d |
-
-> **不採 DELE-then-STOR**：實測使用者對「owner 非自己」的檔有 STOR 覆寫權限但沒 DELE 權限，DELE 路徑根本走不通。
-
-**9d. 驗證手動上傳結果**（9c 失敗後使用者手動 Transmit 上傳完，告知 Claude 後跑）
-```bash
-~/.claude/skills/sv-card/scripts/card_helper.sh verify-vcard "$DEST_DIR/<無空格英文名>.vcf"
-```
-腳本抓 server 上同名 vcf 內容 cmp 對本地，印：
-- `match` → Claude 轉達「✅ vCard 已驗證 server 端與本地一致」+ URL
-- `mismatch` → Claude 轉達「❌ 上傳失敗（server 端內容與本地不同，可能被其他人覆蓋），請洽產品工程部協助確認」
-- `missing` → Claude 轉達「❌ 上傳失敗（server 上找不到該檔案），請洽產品工程部協助確認」
-
-> 為什麼要驗證：`9c ✅ 上傳成功` 訊息可能 false positive — 實測過 STOR 226 Transfer complete 後，server 端檔案被其他 process / 真實 owner 覆蓋回原版。verify-vcard 用 cmp 二進位比對才能確認 server 端真的是您上傳的內容。
+9a 預查同名檔（`upload-vcard --check-only`，必跑）→ `exists` 時 **9b 🛑 GATE 逐字問是否覆蓋** → 9c 上傳（含 preflight + retry）→ 失敗時 9d `verify-vcard` 驗證手動上傳。完整命令、GATE 逐字問句、9c 結果分支表、9d 驗證轉達句 → 詳見 [`docs/upload-vcard.md`](~/.claude/skills/sv-card/docs/upload-vcard.md)
 
 ## 📂 最終產出
 
-`$SV_OUTPUT_BASE/SV/{中文姓名}_{英文名去alias}/`（v0.14.0+：`SV_OUTPUT_BASE` 為名片根目錄、TW 接 `/SV`；預設 `~/Documents/名片/SV/`）內：
+`$SV_OUTPUT_BASE/SV/{中文姓名}_{英文名去alias}/`（`SV_OUTPUT_BASE` 為名片根目錄、TW 接 `/SV`；預設 `~/Documents/名片/SV/`）內，**TW 版 6 個檔案**：
+- `{YYYYMMDD}-{中文名}_{英文名}.ai`（原檔，可編輯）、`OL-{YYYYMMDD}-{中文名}_{英文名}.ai`（OL CS6，送印）、`{YYYYMMDD}-{中文名}_{英文名}.jpg`（預覽 2000×780）
+- `{無空格英文名}.vcf`（vCard — Step 9 已自動上傳到 `drive.streetvoice.com/vcard/`，覆蓋同名舊檔）
+- `QR Code.svg`（QR 原檔）、`簽呈編號-{表單號}.pdf`（簽呈備份，Step 1.5 裁掉表單註釋以下）
 
-**TW 版（6 個檔案）：**
-
-| 檔案 | 用途 |
-|---|---|
-| `{YYYYMMDD}-{中文名}_{英文名}.ai` | 原檔（可編輯）|
-| `OL-{YYYYMMDD}-{中文名}_{英文名}.ai` | OL CS6（送印）|
-| `{YYYYMMDD}-{中文名}_{英文名}.jpg` | 預覽 2000×780 |
-| `{無空格英文名}.vcf` | vCard — Step 9 已自動上傳到 `drive.streetvoice.com/vcard/`（覆蓋同名舊檔）|
-| `QR Code.svg` | QR 原檔 |
-| `簽呈編號-{表單號}.pdf` | 簽呈備份（Step 1.5 裁掉表單註釋以下；v0.8.5+）|
-
-**中子 BVI 版（4 個檔案，v0.10.0+）：**
-
-| 檔案 | 用途 |
-|---|---|
-| `{YYYYMMDD}-{中文名}_{英文名}.ai` | 原檔（可編輯）|
-| `OL-{YYYYMMDD}-{中文名}_{英文名}.ai` | OL CS6（送印）|
-| `{YYYYMMDD}-{中文名}_{英文名}.jpg` | 預覽 2000×780 |
-| `簽呈編號-{表單號}.pdf` | 簽呈備份 |
-
-> 中子版**不產 vCard / QR Code**（依使用者指示），Step 9 也整段跳過。
-
-> Step 9 upload-vcard 已自動印出「vCard 已上傳 server [並覆蓋舊檔]」+ 公開 URL，收尾時把這兩行轉達給使用者即可。
+中子 BVI 版 4 個檔案（無 vCard / QR）→ 見 [`docs/branch-neutron.md`](~/.claude/skills/sv-card/docs/branch-neutron.md)。收尾時把 upload-vcard 印出的「vCard 已上傳 server」+ 公開 URL 轉達給使用者。
 
 ## ⚠️ 關鍵注意事項
 
@@ -302,16 +139,11 @@ Claude 用此句問使用者（**逐字**，把實際檔名代入）：
 
 | 用途 | 路徑 |
 |---|---|
-| 模板 .ai（TW 有手機版，預設）| `~/.claude/skills/sv-card/templates/20260612-名片模版_TW 街聲.ai` |
-| 模板 .ai（TW 無手機版）| `~/.claude/skills/sv-card/templates/20260622-名片模版_TW 街聲（無手機）.ai`（簽呈無手機時自動選用；v0.18.0 起改新分機框排版）|
-| 模板 .ai（中子 BVI 版，v0.10.0+）| `~/.claude/skills/sv-card/templates/20260612-名片模版_中子BVI.ai`（簽呈版型「中子BVI」時用 `--template-type zhongzi-bvi`）|
-| 模板 .ai（台灣中子版，v0.12.0+）| `~/.claude/skills/sv-card/templates/20260612-名片模版_台灣中子.ai`（簽呈版型「台灣中子」時用 `--template-type zhongzi-taiwan`）|
+| 模板 .ai ×4：TW 有手機（預設，`20260612-名片模版_TW 街聲.ai`）／TW 無手機（簽呈無手機時自動選用，`20260622-名片模版_TW 街聲（無手機）.ai`）／中子BVI（`20260612-名片模版_中子BVI.ai`）／台灣中子（`20260612-名片模版_台灣中子.ai`）| `~/.claude/skills/sv-card/templates/` |
 | Bash 操作合集 | `~/.claude/skills/sv-card/scripts/card_helper.sh` |
-| vCard + QR + 預處理 | `~/.claude/skills/sv-card/scripts/make_card_artifacts.py` |
-| 欄位替換 + 存檔 | `~/.claude/skills/sv-card/scripts/replace_fields.jsx` |
-| QR 置入 + CMYK 染色 | `~/.claude/skills/sv-card/scripts/place_qr.jsx` |
-| GATE 後合併收尾（清殘留+存 original+OL）| `~/.claude/skills/sv-card/scripts/finalize.jsx` |
-| 簽呈 PDF 備份 + 裁切（v0.8.5+）| `~/.claude/skills/sv-card/scripts/backup_signoff_pdf.py` |
+| vCard + QR + 預處理／簽呈 PDF 備份裁切 | `scripts/make_card_artifacts.py`／`backup_signoff_pdf.py` |
+| 欄位替換／QR 置入／GATE 後收尾 | `scripts/replace_fields.jsx`／`place_qr.jsx`／`finalize.jsx` |
+| PDF 欄位對照＋必看項／中子分支／Step 9 分支／首次流程 | `docs/pdf-extract.md`／`branch-neutron.md`／`upload-vcard.md`／`first-run.md` |
 | 詳細 SOP（含已知問題深度說明）| `~/.claude/skills/sv-card/docs/SOP.md` |
-| Illustrator MCP server | 依使用者安裝位置（install.sh 會偵測；常見路徑 `~/mcp-servers/illustrator-mcp-server/`）|
+| Illustrator MCP server | 依使用者安裝位置（install.sh 會偵測；常見 `~/mcp-servers/illustrator-mcp-server/`）|
 | 使用者偏好設定 | `~/.config/sv-card/env`（install.sh 寫入；可覆寫 SV_OUTPUT_BASE、SV_TEMPLATE）|
