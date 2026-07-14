@@ -21,6 +21,9 @@
 
 ## Claude 必看項（腳本抓不到的判斷）
 
+> **v0.22.0+：三條非常規已機械化偵測。** `extract-pdf` 會在 JSON output 加旗標並對 stderr 印 ⚠️：
+> `english_name_has_cjk`（英文名中英混填 → 🛑 停下問印英/中/兩者）、`card_name_had_employee_id`（姓名帶員編已去除 → 確認只印姓名）、`mobile_nonstandard`（手機非標準 → init 會自動 3-3-3、請核對）。**看到這些 ⚠️ 一律照指示處理，別略過。**
+
 - **機械萃取全 null（關鍵欄位全抓不到）**→ 中子系列 PDF 中文 layer 圖片化（CID 編碼）常見，`extract-pdf` 會印 `⚠️` 警告。此時**以 Claude 視覺萃取（Read PDF）為準、逐欄與使用者人工確認**（失去機械雙重檢核），不可照單全收直接跑。
 - **中英文 typo**：腳本照字面抓（如 `Strong Wo` 會原樣輸出），Claude 看 PDF 視覺判斷是否為 typo → 停下問
 - **「其他需求」欄位通常為空白**；若有「請協助送印」「TW」以外的特殊備註 → 停下問

@@ -100,10 +100,13 @@ def extract_fields(pdf_path):
     if out["card_name_raw"]:
         # 中文姓名欄位後面的「(數字)」一律去掉、絕不進 PH_NAME（例「王小美(454)」→「王小美」）。
         # 全/半形括號 + 全/半形數字都吃（簽呈填法不一致），並去尾端空白（v0.19.x）。
+        # 偵測旗標（v0.22.0）：有偵測到員編就標記，main() 會印 ⚠️ 提醒確認名片只印姓名。
+        out["card_name_had_employee_id"] = bool(re.search(r"[（(][\d０-９]+[）)]", out["card_name_raw"]))
         cn = re.sub(r"[（(][\d０-９]+[）)]", "", out["card_name_raw"]).strip()
         out["card_name_cn"] = cn
         out["surname_cn"], out["given_cn"] = split_chinese_name(cn)
     else:
+        out["card_name_had_employee_id"] = False
         out["card_name_cn"] = out["surname_cn"] = out["given_cn"] = None
 
     m = re.search(r"名片上的英文名[ \t]+(.+?)[ \t]+名片上的職稱[ \t]+(.+)", text)
@@ -114,9 +117,13 @@ def extract_fields(pdf_path):
         alias, no_alias = split_english_name(en_full)
         out["english_alias"] = alias
         out["english_name_no_alias"] = no_alias
+        # 偵測旗標（v0.22.0）：英文名欄位含中文（中英混填，例「王小美」）→ main() 印 ⚠️
+        # 提醒停下問名片 PH_NAME_EN 要印英文/中文/兩者；.vcf 已自動只取 ASCII 英文。
+        out["english_name_has_cjk"] = bool(re.search(r"[一-鿿]", en_full))
     else:
         out["english_name_full"] = out["title"] = None
         out["english_alias"] = out["english_name_no_alias"] = None
+        out["english_name_has_cjk"] = False
 
     m = re.search(r"名片上的郵件地址[ \t]+(\S+@\S+)", text)
     out["email"] = m.group(1).strip() if m else None
@@ -125,6 +132,12 @@ def extract_fields(pdf_path):
     # 全檔通則（v0.8.9）：欄位 label 與內容之間用 [ \t] 不用 \s，避免欄位空白時跨行誤抓
     # 手機抽取見 parse_ext_and_mobile（v0.16.1：改 [^\n]* 修含空格號碼被截斷）
     out["office_ext"], out["mobile"] = parse_ext_and_mobile(text)
+    # 偵測旗標（v0.22.0）：手機有填但不是乾淨的 10 碼 09 開頭（可能含奇怪分隔、位數不對）。
+    # init 的 to_card_mobile 會自動 normalize 成 +886-9XX-XXX-XXX，此旗標讓 main() 印 ⚠️ 提醒核對。
+    _mob_digits = re.sub(r"\D", "", out["mobile"] or "")
+    if _mob_digits.startswith("886"):
+        _mob_digits = "0" + _mob_digits[3:]
+    out["mobile_nonstandard"] = bool(out["mobile"]) and not (len(_mob_digits) == 10 and _mob_digits.startswith("09"))
 
     m = re.search(r"名片版型[ \t]+(.+?)(?:\n|$)", text)
     out["template_type"] = m.group(1).strip() if m else None
@@ -163,6 +176,22 @@ def main():
             "⚠️ 關鍵欄位全部抓不到 —— 疑似中文圖片化 PDF（中子 BVI / 台灣中子常見）。\n"
             "   機械萃取對此類 PDF 失效屬正常；請以 Claude 視覺萃取（Read PDF）為準，\n"
             "   並逐欄與使用者人工確認（此時失去機械雙重交叉檢核）。\n"
+        )
+
+    # 非常規欄位偵測（v0.22.0）：把「Claude 必看項」機械化，主動印 ⚠️ 提醒該停下確認，
+    # 不再只靠 Claude 臨場眼力。三種情況對應三條自動修正規則（vcf 取英文 / 手機 3-3-3 / 姓名去員編）。
+    if fields.get("english_name_has_cjk"):
+        sys.stderr.write(
+            "⚠️ 英文名欄位含中文（中英混填，如「英文 中文」）—— 🛑 停下問使用者：\n"
+            "   名片 PH_NAME_EN 要印「只英文 / 只中文 / 中英都印」？（.vcf/URL/QR 已自動只取 ASCII 英文）\n"
+        )
+    if fields.get("card_name_had_employee_id"):
+        sys.stderr.write(
+            "⚠️ 中文姓名含員編「(數字)」，已自動去除只留姓名 —— 請確認名片只印姓名、不印員編。\n"
+        )
+    if fields.get("mobile_nonstandard"):
+        sys.stderr.write(
+            "⚠️ 手機非標準 10 碼 09 格式，init 會自動 normalize 成 +886-9XX-XXX-XXX —— 請核對號碼正確。\n"
         )
 
 

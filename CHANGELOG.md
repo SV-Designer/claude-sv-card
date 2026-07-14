@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+## [0.22.0] — 2026-07-14
+
+### Added
+- **`extract-pdf` 腳本階段主動偵測三種非常規欄位並印 ⚠️**（`extract_signoff_fields.py`）：把原本只寫在 docs「Claude 必看項」、靠 Claude 臨場眼力抓的判斷**機械化**，讓每張簽呈在萃取當下就自動示警，不再漏看。JSON output 新增三個旗標，main() 依旗標對 stderr 印 ⚠️：
+  - `english_name_has_cjk`：英文名欄位含中文（中英混填，如「王小美」）→ 🛑 停下問使用者名片 PH_NAME_EN 要印「只英文／只中文／中英都印」（`.vcf`／URL／QR 已自動只取 ASCII 英文）。
+  - `card_name_had_employee_id`：中文姓名帶員編「(數字)」已自動去除 → 提醒確認名片只印姓名。
+  - `mobile_nonstandard`：手機非標準 10 碼 09 格式 → 提醒 init 會自動 normalize 成 `+886-9XX-XXX-XXX`、請核對（乾淨的 10 碼號碼不誤報）。
+
+### Notes
+- 動機：v0.21.0 的三條自動修正（vcf 取英文／手機 3-3-3／姓名去員編）是「靜默處理 + CHANGELOG 記一筆」；使用者要求**腳本階段就要偵測到問題**、主動提醒該停下確認，故此版把偵測前移到萃取階段。
+- `docs/pdf-extract.md`「Claude 必看項」同步標注三旗標與「看到 ⚠️ 一律照指示處理」。
+
 ## [0.21.0] — 2026-07-14
 
 ### Changed
