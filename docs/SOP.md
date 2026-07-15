@@ -103,6 +103,7 @@ Claude 自動依序：
 ```
 
 > ✅ **中子 BVI 版已於 v0.14.0 畢業納入自動化白名單**：流程同 TW 全自動，僅 Step 6 GATE 需確認，不再每步停下。上方 8 步流程圖保留供理解分支差異。逐步確認規則（見本檔「🆕 新版型測試 → 畢業規則」節）改為**僅未來新增版型**適用。
+> ✅ **v0.24.0+ 支援無手機版**：簽呈無手機時自動選用 `SV_TEMPLATE_ZHONGZI_NO_MOBILE`（`templates/20260715-名片模版_中子BVI（無手機版）.ai`），與 TW 街聲無手機版同模式，無需再手動處理留白欄位。
 
 ### 台灣中子版分支（v0.12.0+）
 
@@ -112,6 +113,7 @@ Claude 自動依序：
 - **專屬模板**：`SV_TEMPLATE_ZHONGZI_TAIWAN`（`templates/20260612-名片模版_台灣中子.ai`），設計含 FAX 行（靜態）、僅台北一址。
 - **輸出路徑**：`$SV_OUTPUT_BASE_ZHONGZI_TAIWAN`（預設 `~/Documents/名片/台灣中子`）。
 - email 同為 `@neuin.com`；office 電話/地址與街聲同（模板靜態）；分機照簽呈帶入。
+- ✅ **v0.24.0+ 支援無手機版**：簽呈無手機時自動選用 `SV_TEMPLATE_ZHONGZI_TAIWAN_NO_MOBILE`（`templates/20260715-名片模版_台灣中子（無手機版）.ai`）。
 - 同中子 BVI：跳過 artifacts / QR / upload（card_helper.sh 與 finalize.jsx 一律以「`template_type != tw`」判斷 skip，v0.12.0+ 泛化）。
 - ✅ **已通過 2 次測試納入自動化白名單（v0.14.0）**：流程同 TW 全自動，僅 Step 6 GATE 需確認，不再每步停下。
 

@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+## [0.24.0] — 2026-07-15
+
+### Added
+- **中子BVI／台灣中子補齊無手機版模板**：`card_helper.sh` 新增 `SV_TEMPLATE_ZHONGZI_NO_MOBILE`、`SV_TEMPLATE_ZHONGZI_TAIWAN_NO_MOBILE` 兩個環境變數，模板檔 `templates/20260715-名片模版_中子BVI（無手機版）.ai`、`templates/20260715-名片模版_台灣中子（無手機版）.ai` 納入 repo。簽呈無手機時，兩版型自動改選無手機版模板（同 TW 街聲既有模式），不再印「⚠️ 目前僅支援有手機版…請手動處理」警告、不用再進 Illustrator 手動清空欄位。
+- `install.sh` 模板完整性檢查新增此兩檔，缺檔會在安裝當下就攔下。
+- `docs/SOP.md` 中子 BVI / 台灣中子分支段落補充無手機版說明。
+
+### Notes
+- 動機：對照 #5「中子版無手機模板缺口」優化清單——過去中子系列只做了有手機版模板，遇無手機簽呈只能事後人工修圖；此版補齊後與 TW 街聲版待遇一致。
+- 模板欄位命名（PH_* placeholder）因 .ai 為壓縮 PDF 串流，無法用純文字工具靜態驗證；正確性仰賴既有安全網——`replace_fields.jsx` 找不到欄位時印 `ERROR: missing PH_X` 但不中斷，需實際跑一次真實無手機中子簽呈時確認。
+
 ## [0.23.2] — 2026-07-14
 
 ### Fixed
