@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  # 預先 opt-in Node.js 24（2026-06-02 後 GitHub Actions 強迫升級）
+  # 避免 actions/checkout@v4 + actions/setup-python@v5 用 Node 20 的 deprecation 上線後出問題
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  smoke:
+    name: Smoke test (shell + python + sidecar schema)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Install Python deps
+        run: pip3 install jsonschema
+
+      - name: Run smoke tests
+        run: bash tests/smoke.sh

@@ -1,0 +1,23 @@
+{
+  "fields": {
+    "PH_NAME_CN_SURNAME": "王",
+    "PH_NAME_CN_GIVEN": "小明",
+    "PH_NAME_EN": "Ming Wang",
+    "PH_TITLE": "美術設計",
+    "PH_PHONE_EXT": "375",
+    "PH_PHONE_MOBILE": "0900-000-000",
+    "PH_EMAIL": "mingwang@streetvoice.com"
+  },
+  "template_type": "tw",
+  "dest_path": "/Users/test/Documents/名片/SV/王小明_Ming Wang/20260612-王小明_Ming Wang.ai",
+  "artifacts": {
+    "surname": "王",
+    "given": "小明",
+    "en": "Ming Wang",
+    "title": "美術設計",
+    "email": "mingwang@streetvoice.com",
+    "mobile": "+886 900 000 000",
+    "folder": "/Users/test/Documents/名片/SV/王小明_Ming Wang",
+    "vcf_name": "MingWang.vcf"
+  }
+}
