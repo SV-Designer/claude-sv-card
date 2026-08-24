@@ -96,17 +96,17 @@ Claude 自動依序：
 ```
 
 > ✅ **中子 BVI 版已於 v0.14.0 畢業納入自動化白名單**：流程同 TW 全自動，僅 Step 6 GATE 需確認，不再每步停下。上方 8 步流程圖保留供理解分支差異。逐步確認規則（見本檔「🆕 新版型測試 → 畢業規則」節）改為**僅未來新增版型**適用。
-> ✅ **v0.24.0+ 支援無手機版**：簽呈無手機時自動選用 `SV_TEMPLATE_ZHONGZI_NO_MOBILE`（`templates/20260715-名片模版_中子BVI（無手機版）.ai`），與 TW 街聲無手機版同模式，無需再手動處理留白欄位。
+> ✅ **v0.24.0+ 支援無手機版**：簽呈無手機時自動選用 `SV_TEMPLATE_ZHONGZI_NO_MOBILE`（`templates/20260824-名片模版_中子BVI（無手機版）.ai`），與 TW 街聲無手機版同模式，無需再手動處理留白欄位。
 
 ### 台灣中子版分支（v0.12.0+）
 
 `template_type == "台灣中子"`（簽呈版型欄）時走 `--template-type zhongzi-taiwan`，流程同上中子 BVI 簡化版，差異如下：
 
 - **不需 `--company`**：台灣中子是中子創新旗下台灣子公司，**單一公司**，公司名「台灣中子創新股份有限公司」**靜態寫死於模板**（模板無 `PH_COMPANY` 框，⑥ 只替換 7 欄位）。
-- **專屬模板**：`SV_TEMPLATE_ZHONGZI_TAIWAN`（`templates/20260612-名片模版_台灣中子.ai`），設計含 FAX 行（靜態）、僅台北一址。
+- **專屬模板**：`SV_TEMPLATE_ZHONGZI_TAIWAN`（`templates/20260824-名片模版_台灣中子.ai`），設計含 FAX 行（靜態）、僅台北一址。
 - **輸出路徑**：`$SV_OUTPUT_BASE_ZHONGZI_TAIWAN`（預設 `~/Documents/名片/台灣中子`）。
 - email 同為 `@neuin.com`；office 電話/地址與街聲同（模板靜態）；分機照簽呈帶入。
-- ✅ **v0.24.0+ 支援無手機版**：簽呈無手機時自動選用 `SV_TEMPLATE_ZHONGZI_TAIWAN_NO_MOBILE`（`templates/20260715-名片模版_台灣中子（無手機版）.ai`）。
+- ✅ **v0.24.0+ 支援無手機版**：簽呈無手機時自動選用 `SV_TEMPLATE_ZHONGZI_TAIWAN_NO_MOBILE`（`templates/20260824-名片模版_台灣中子（無手機版）.ai`）。
 - 同中子 BVI：跳過 artifacts / QR / upload（card_helper.sh 與 finalize.jsx 一律以「`template_type != tw`」判斷 skip，v0.12.0+ 泛化）。
 - ✅ **已通過 2 次測試納入自動化白名單（v0.14.0）**：流程同 TW 全自動，僅 Step 6 GATE 需確認，不再每步停下。
 
@@ -593,8 +593,8 @@ finalize.jsx 內部行為：
 
 ### P2 — 需求驅動（等實際 PDF 進來再做）
 
-- [x] ~~中子 BVI 版~~（v0.10.0 完成 + v0.10.1 補強；**v0.14.0 納入自動化白名單**）— 模板 `templates/20260612-名片模版_中子BVI.ai`，`--template-type zhongzi-bvi --company {bvi|wenhua}` 走簡化分支（跳過 vCard / QR / 上傳，輸出 4 個檔案，路徑依公司分流）。**已畢業 → 全自動同 TW，僅 Step 6 GATE 需確認。**
-- [x] ~~台灣中子版~~（v0.12.0 完成；**v0.14.0 通過 2 次測試納入自動化白名單**）— 模板 `templates/20260612-名片模版_台灣中子.ai`，`--template-type zhongzi-taiwan`（單一公司，不需 `--company`）走中子簡化分支，輸出至 `~/Documents/名片/台灣中子`。skip 判斷由 `== zhongzi-bvi` 泛化為 `!= tw`（card_helper.sh + finalize.jsx）。**已畢業 → 全自動同 TW，僅 Step 6 GATE 需確認。**
+- [x] ~~中子 BVI 版~~（v0.10.0 完成 + v0.10.1 補強；**v0.14.0 納入自動化白名單**）— 模板 `templates/20260824-名片模版_中子BVI.ai`，`--template-type zhongzi-bvi --company {bvi|wenhua}` 走簡化分支（跳過 vCard / QR / 上傳，輸出 4 個檔案，路徑依公司分流）。**已畢業 → 全自動同 TW，僅 Step 6 GATE 需確認。**
+- [x] ~~台灣中子版~~（v0.12.0 完成；**v0.14.0 通過 2 次測試納入自動化白名單**）— 模板 `templates/20260824-名片模版_台灣中子.ai`，`--template-type zhongzi-taiwan`（單一公司，不需 `--company`）走中子簡化分支，輸出至 `~/Documents/名片/台灣中子`。skip 判斷由 `== zhongzi-bvi` 泛化為 `!= tw`（card_helper.sh + finalize.jsx）。**已畢業 → 全自動同 TW，僅 Step 6 GATE 需確認。**
 - ~~**中子版 — 無手機版**~~（2026-06-12 使用者拍板**暫不做**，未來真有無手機中子簽呈會再主動提出）
 - ~~CN / EN / Legacy 版~~（2026-06-12 使用者拍板**不做、完全忽略**，自此不列入待辦）
 

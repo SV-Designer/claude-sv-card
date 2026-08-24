@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+## [0.25.0] — 2026-08-24
+
+### 安全
+- **兩支 saveAs 產生的模板清掉 `%%For` 帳號名**：ExtendScript `saveAs` 會把登入帳號寫進 `.ai` 的 `%%For` 中繼資料，等長二進位取代為與其他模板一致的 `(owner)`（檔案位元組長度不變）。
+- **`.gitignore` 註解移除本機絕對路徑**：原註解為佐證而寫出真實家目錄路徑，改為「含本機絕對路徑」。
+
+### Changed
+- **中子 BVI／台灣中子「無手機版」模板同步新 Logo 面**：`templates/20260715-名片模版_{中子BVI,台灣中子}（無手機版）.ai` → `templates/20260824-名片模版_{中子BVI,台灣中子}（無手機版）.ai`。以 ExtendScript 將 20260824 有手機版的整組 Logo 面（左半，`x < 300`）移植過來取代舊 Logo 面（舊 4 個 logo → 新 6 個 logo），資訊面（右半）與全部 `PH_*` placeholder 皆未動（中子BVI 無手機版 7 個、台灣中子無手機版 6 個），背景色維持各自版型原色。同步更新 `card_helper.sh` 的 `SV_TEMPLATE_ZHONGZI_NO_MOBILE` / `SV_TEMPLATE_ZHONGZI_TAIWAN_NO_MOBILE` 預設、`install.sh` 完整性檢查、`docs/SOP.md`。舊檔移至 `templates/backups/`。
+- **中子 BVI／台灣中子（有手機版）模板更新為 2026-08-24 版**：`templates/20260612-名片模版_{中子BVI,台灣中子}.ai` → `templates/20260824-名片模版_{中子BVI,台灣中子}.ai`（設計改版，placeholder 命名與座標皆未變動：中子 BVI 8 個 `PH_*`、台灣中子 7 個 `PH_*`，位置與舊版逐項一致，程式不需改邏輯）。同步更新 `card_helper.sh` 的 `SV_TEMPLATE_ZHONGZI` / `SV_TEMPLATE_ZHONGZI_TAIWAN` 預設、`install.sh` 模板完整性檢查、`SKILL.md`、`docs/SOP.md`。舊檔移至 `templates/backups/`。（無手機版同批更新，見上一條。）
+
 ## [0.24.6] — 2026-08-05
 
 ### 安全

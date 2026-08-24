@@ -5,6 +5,8 @@ description: StreetVoice 街聲名片自動化。觸發詞：「做名片」（�
 
 # SV 名片自動化製作
 
+> 🔧 **要「改」這支 skill（不是用它）之前**：先 `cd ~/Claude/Skills/正本/claude-sv-card`，同夾的 `CLAUDE.md` 會自動載入——三層架構、發版怎麼跑、刻意狀態與紅線都在那。**那份不會發版出去**（已寫進 `.gitignore`）。
+
 > 本 skill 是 SOP 的「執行手冊」精簡版。完整原理、已知問題、設計理由見 [`SOP.md`](~/.claude/skills/claude-sv-card/docs/SOP.md)。**首次使用前必須跑 `install.sh`**（在 repo 根目錄）：建 symlink、檢查依賴、寫入使用者偏好設定。
 
 ## 🎯 觸發 + 版型路由
@@ -141,7 +143,7 @@ $.evalFile(Folder("~").fsName + "/.claude/skills/claude-sv-card/scripts/finalize
 
 | 用途 | 路徑 |
 |---|---|
-| 模板 .ai ×4：TW 有手機（預設，`20260612-名片模版_TW 街聲.ai`）／TW 無手機（簽呈無手機時自動選用，`20260622-名片模版_TW 街聲（無手機）.ai`）／中子BVI（`20260612-名片模版_中子BVI.ai`）／台灣中子（`20260612-名片模版_台灣中子.ai`）| `~/.claude/skills/claude-sv-card/templates/` |
+| 模板 .ai ×4：TW 有手機（預設，`20260612-名片模版_TW 街聲.ai`）／TW 無手機（簽呈無手機時自動選用，`20260622-名片模版_TW 街聲（無手機）.ai`）／中子BVI（`20260824-名片模版_中子BVI.ai`）／台灣中子（`20260824-名片模版_台灣中子.ai`）| `~/.claude/skills/claude-sv-card/templates/` |
 | Bash 操作合集 | `~/.claude/skills/claude-sv-card/scripts/card_helper.sh` |
 | vCard + QR + 預處理／簽呈 PDF 備份裁切 | `scripts/make_card_artifacts.py`／`backup_signoff_pdf.py` |
 | 欄位替換／QR 置入／GATE 後收尾 | `scripts/replace_fields.jsx`／`place_qr.jsx`／`finalize.jsx` |

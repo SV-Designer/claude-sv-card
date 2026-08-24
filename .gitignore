@@ -17,3 +17,7 @@ __pycache__/
 
 # Illustrator 暫存檔
 ~ai-*.tmp
+
+# 本機交接文件（含本機絕對路徑，絕不可進公開 repo）
+/CLAUDE.md
+/分析/
