@@ -21,85 +21,104 @@
 //
 // 回傳：成功 → "OK replaced=N source=sidecar|global"；有缺欄 → "ERROR: missing PH_X, PH_Y"
 
+// ── v0.26.0：整支包 try/catch ＋ 落 log ──────────────────────────
+// 為什麼：ExtendScript 出錯時 MCP 只會回一句籠統訊息，看不出是哪一行、哪個階段掛掉；
+//        以前只能靠人重跑一次猜。現在錯誤會帶行號回傳，並附加到 /tmp/sv_card_jsx.log，
+//        做完名片如果哪裡怪，直接看那支 log 就知道每一步回了什麼。
+// log 只寫 /tmp，不影響任何產出檔；寫 log 自己失敗也被吞掉，絕不會拖垮名片流程。
 (function() {
-    // 帶到前景，避免 macOS 對背景 GUI app 限速
-    try { BridgeTalk.bringToFront(BridgeTalk.appName); } catch (e) {}
+    var __result;
+    try {
+        __result = (function() {
 
-    var fields = null;
-    var destPath = null;  // v0.10.3+：sidecar 帶 dest_path 做顯式 saveAs 繞 corrupt fullName
-    var source = "";
+            // 帶到前景，避免 macOS 對背景 GUI app 限速
+            try { BridgeTalk.bringToFront(BridgeTalk.appName); } catch (e) {}
 
-    // 1. 優先讀 sidecar
-    var sidecarPath = $.global.SIDECAR_PATH || "/tmp/sv_card_fields.json";
-    var f = new File(sidecarPath);
-    if (f.exists) {
-        f.encoding = "UTF-8";
-        f.open("r");
-        var content = f.read();
-        f.close();
-        // ExtendScript 沒原生 JSON.parse，用 eval 包成表達式
-        var data;
-        try { data = eval("(" + content + ")"); }
-        catch (e) { return "ERROR: sidecar parse failed: " + e.message; }
-        fields = data.fields || data;
-        if (data.dest_path) destPath = data.dest_path;
-        source = "sidecar";
-    } else if ($.global.FIELDS) {
-        // 2. Fallback：手動覆寫
-        fields = $.global.FIELDS;
-        source = "global";
-    } else {
-        return "ERROR: no sidecar " + sidecarPath + " and no $.global.FIELDS";
+            var fields = null;
+            var destPath = null;  // v0.10.3+：sidecar 帶 dest_path 做顯式 saveAs 繞 corrupt fullName
+            var source = "";
+
+            // 1. 優先讀 sidecar
+            var sidecarPath = $.global.SIDECAR_PATH || "/tmp/sv_card_fields.json";
+            var f = new File(sidecarPath);
+            if (f.exists) {
+                f.encoding = "UTF-8";
+                f.open("r");
+                var content = f.read();
+                f.close();
+                // ExtendScript 沒原生 JSON.parse，用 eval 包成表達式
+                var data;
+                try { data = eval("(" + content + ")"); }
+                catch (e) { return "ERROR: sidecar parse failed: " + e.message; }
+                fields = data.fields || data;
+                if (data.dest_path) destPath = data.dest_path;
+                source = "sidecar";
+            } else if ($.global.FIELDS) {
+                // 2. Fallback：手動覆寫
+                fields = $.global.FIELDS;
+                source = "global";
+            } else {
+                return "ERROR: no sidecar " + sidecarPath + " and no $.global.FIELDS";
+            }
+
+            var d = app.activeDocument;
+            if (!d) { return "ERROR: no active document"; }
+
+            // 建 name → TextFrame 索引（避免每個欄位都全表掃一遍）
+            var idx = {};
+            for (var i = 0; i < d.textFrames.length; i++) {
+                var tf = d.textFrames[i];
+                if (tf.name) { idx[tf.name] = tf; }
+            }
+
+            var replaced = 0;
+            var missing = [];
+            for (var key in fields) {
+                if (!fields.hasOwnProperty(key)) { continue; }
+                var target = idx[key];
+                if (target) {
+                    target.contents = String(fields[key]);
+                    replaced++;
+                } else {
+                    missing.push(key);
+                }
+            }
+
+            if (missing.length > 0) {
+                return "ERROR: missing " + missing.join(", ");
+            }
+
+            // v0.10.3+：優先用 sidecar dest_path 顯式 saveAs（繞 corrupt fullName）
+            // Illustrator 啟動中時 open 會讓 fullName 變 "/Applications/Adobe Illustrator 2026"
+            // 導致 d.save() 9031 錯誤；用顯式路徑可避開
+            var saveMethod = "save";
+            if (destPath) {
+                try {
+                    var saveOpts = new IllustratorSaveOptions();
+                    saveOpts.pdfCompatible = true;
+                    saveOpts.compressed = true;
+                    saveOpts.embedICCProfile = true;
+                    d.saveAs(new File(destPath), saveOpts);
+                    saveMethod = "saveAs(" + destPath + ")";
+                } catch (e) {
+                    // fallback d.save() — 若還是錯就回傳 error message
+                    d.save();
+                    saveMethod = "save(fallback)";
+                }
+            } else {
+                d.save();
+            }
+            // 清掉 $.global.FIELDS，避免下次執行如果 sidecar 缺席時誤用殘留值
+            $.global.FIELDS = null;
+            return "OK replaced=" + replaced + " source=" + source + " save=" + saveMethod;
+        })();
+    } catch (__e) {
+        __result = "ERROR: replace_fields.jsx line " + (__e.line || "?") + ": " + (__e.message || __e);
     }
-
-    var d = app.activeDocument;
-    if (!d) { return "ERROR: no active document"; }
-
-    // 建 name → TextFrame 索引（避免每個欄位都全表掃一遍）
-    var idx = {};
-    for (var i = 0; i < d.textFrames.length; i++) {
-        var tf = d.textFrames[i];
-        if (tf.name) { idx[tf.name] = tf; }
-    }
-
-    var replaced = 0;
-    var missing = [];
-    for (var key in fields) {
-        if (!fields.hasOwnProperty(key)) { continue; }
-        var target = idx[key];
-        if (target) {
-            target.contents = String(fields[key]);
-            replaced++;
-        } else {
-            missing.push(key);
-        }
-    }
-
-    if (missing.length > 0) {
-        return "ERROR: missing " + missing.join(", ");
-    }
-
-    // v0.10.3+：優先用 sidecar dest_path 顯式 saveAs（繞 corrupt fullName）
-    // Illustrator 啟動中時 open 會讓 fullName 變 "/Applications/Adobe Illustrator 2026"
-    // 導致 d.save() 9031 錯誤；用顯式路徑可避開
-    var saveMethod = "save";
-    if (destPath) {
-        try {
-            var saveOpts = new IllustratorSaveOptions();
-            saveOpts.pdfCompatible = true;
-            saveOpts.compressed = true;
-            saveOpts.embedICCProfile = true;
-            d.saveAs(new File(destPath), saveOpts);
-            saveMethod = "saveAs(" + destPath + ")";
-        } catch (e) {
-            // fallback d.save() — 若還是錯就回傳 error message
-            d.save();
-            saveMethod = "save(fallback)";
-        }
-    } else {
-        d.save();
-    }
-    // 清掉 $.global.FIELDS，避免下次執行如果 sidecar 缺席時誤用殘留值
-    $.global.FIELDS = null;
-    return "OK replaced=" + replaced + " source=" + source + " save=" + saveMethod;
+    try {
+        var __lf = new File("/tmp/sv_card_jsx.log");
+        __lf.encoding = "UTF-8"; __lf.lineFeed = "Unix";
+        __lf.open("a"); __lf.writeln("[replace_fields.jsx] " + __result); __lf.close();
+    } catch (__e2) {}
+    return __result;
 })();

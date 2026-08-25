@@ -4,7 +4,19 @@
 
 版本號採 [Semantic Versioning](https://semver.org/lang/zh-TW/)：MAJOR.MINOR.PATCH。
 
-## [Unreleased]
+## [0.26.0] — 2026-08-25
+
+### Added
+- **`scripts/check_templates.sh`：模板文字安檢（補 grep 的死角）**。`.ai` 的文字存在壓縮區塊，`grep`／`git grep` 一律看不到，發版護欄對「名片上印的字」其實是瞎的。本腳本產生一支 jsx、用 Illustrator 一次讀完所有模板的 textFrame，跟 `scripts/templates_allowlist.txt`（本版一併新增，34 條）比對；出現白名單以外的文字就中止並要求人眼確認。`--update` 重建白名單、`--dump` 只印文字。只開檔讀取、關檔一律不儲存。
+- **`scripts/normalize_template.sh`：模板中繼資料正規化**。等長二進位取代 `%%For` 的登入帳號為 `(owner)`、`%AI10_OpenToVie`／`%AI9_OpenToView` 的視窗座標歸零（檔案位元組數不變，不重新存檔）。解決 ①saveAs 把帳號寫進 `.ai` ②每次隨手存檔都產生 git 雜訊。`--check` 只檢查不改。7 支模板本版已全部正規化並逐支開檔驗證文字未跑掉。
+
+### Removed
+- **刪除死碼 `scripts/make_card.jsx`**。它是 PH_ 命名替換法出現前的舊版替換腳本，全 repo 已無任何呼叫（唯一提及處是 `docs/SOP.md` 的檔案表，且註明「舊版，已被替代」）。留著只會讓維護者誤以為它還在流程裡。`docs/SOP.md` 該列同步標註已刪除。
+
+### Changed
+- **三支 jsx（`replace_fields` / `place_qr` / `finalize`）整支包 try/catch ＋ 落 log**。ExtendScript 出錯時 MCP 只回一句籠統訊息，看不出哪一行掛掉；現在錯誤會帶行號回傳（`ERROR: <檔名> line N: ...`），並附加寫到 `/tmp/sv_card_jsx.log`。log 只寫 `/tmp`、寫失敗也被吞掉，不影響任何產出檔與既有回傳字串格式。
+- **`place_qr.jsx` 的 cm→pt 換算常數改寫成算式**：`28.3464567` → `(72 / 2.54)`，來歷一眼可見，數值完全相同。
+- **發版護欄改良（`sv-card-release.sh`，不在本 repo）**：純數字電話規則改走 `PHONE_DENY` 變數並自動補上「前後不可是數字或小數點」的邊界（`.ai` 座標小數位會巧合連出 10 碼手機）；命中改用 `grep -o` 只印命中字串並附前後文，避免二進位整行洗版。🚫 刻意不採「整行排除 `%AI…` 中繼資料行」——`.ai` 表頭是一整行超長文字，`%%For` 帳號名跟座標同在那行，整行排除會連真實洩漏一起蓋掉。
 
 ## [0.25.0] — 2026-08-24
 

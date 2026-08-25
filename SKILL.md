@@ -147,6 +147,7 @@ $.evalFile(Folder("~").fsName + "/.claude/skills/claude-sv-card/scripts/finalize
 | Bash 操作合集 | `~/.claude/skills/claude-sv-card/scripts/card_helper.sh` |
 | vCard + QR + 預處理／簽呈 PDF 備份裁切 | `scripts/make_card_artifacts.py`／`backup_signoff_pdf.py` |
 | 欄位替換／QR 置入／GATE 後收尾 | `scripts/replace_fields.jsx`／`place_qr.jsx`／`finalize.jsx` |
+| **模板維護（改完模板才用，做名片流程不會用到）** | `scripts/check_templates.sh`（開 Illustrator 讀出模板全部文字，跟 `scripts/templates_allowlist.txt` 白名單比對——`.ai` 文字在壓縮區塊裡，grep 掃不到，這是唯一看得見的方法）／`scripts/normalize_template.sh`（等長二進位清掉 `%%For` 帳號名與 `OpenToView` 視窗座標，避免帳號外流與 git 雜訊）|
 | PDF 欄位對照＋必看項／中子分支／Step 9 分支／首次流程 | `docs/pdf-extract.md`／`branch-neutron.md`／`upload-vcard.md`／`first-run.md` |
 | 詳細 SOP（含已知問題深度說明）| `~/.claude/skills/claude-sv-card/docs/SOP.md` |
 | Illustrator MCP server | 依使用者安裝位置（install.sh 會偵測；常見 `~/mcp-servers/illustrator-mcp-server/`）|

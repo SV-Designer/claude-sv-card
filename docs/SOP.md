@@ -577,7 +577,7 @@ finalize.jsx 內部行為：
 | **欄位替換 jsx**（Step 6+7 合併）| `~/.claude/skills/claude-sv-card/scripts/replace_fields.jsx` |
 | **QR 置入 + 染色 jsx**（Step 10 主邏輯）| `~/.claude/skills/claude-sv-card/scripts/place_qr.jsx` |
 | **GATE 後合併收尾 jsx**（Step 12a）| `~/.claude/skills/claude-sv-card/scripts/finalize.jsx` |
-| 名片替換 jsx（舊版，已被 PH_ 命名替代）| `~/.claude/skills/claude-sv-card/scripts/make_card.jsx` |
+| ~~名片替換 jsx（舊版）~~ | 已於 v0.26.0 刪除——功能早被 `replace_fields.jsx` 的 PH_ 命名替換取代，留著只會讓人誤讀成還在用 |
 | Illustrator MCP server | 由使用者另行安裝（fork: spencerhhubert/illustrator-mcp-server，需去掉 Claude activate、加長 timeout）|
 | 使用者偏好設定 | `~/.config/sv-card/env`（install.sh 寫入；可覆寫 SV_OUTPUT_BASE、SV_TEMPLATE）|
 
