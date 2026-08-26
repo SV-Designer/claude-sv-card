@@ -185,7 +185,7 @@ Claude 自動依序：
 
 ### 模板物件命名（首次設定，已完成）
 
-模板位置：`~/.claude/skills/claude-sv-card/templates/20260612-名片模版_TW 街聲.ai`（install.sh 會 symlink 進去）
+模板位置：`~/.claude/skills/claude-sv-card/templates/20260825-名片模版_TW 街聲.ai`（install.sh 會 symlink 進去）
 
 可編輯欄位都已用 `PH_` 前綴命名：
 
@@ -237,7 +237,7 @@ QR Code 命名（置入後）：`PH_QRCODE`（模板已內建命名，直接用�
 
 | 簽呈情況 | init 參數 | 結果 |
 |---|---|---|
-| 有手機 + 有分機 | `--mobile "..." --office-ext "..."` | 用預設新版模板 (`20260612-名片模版_TW 街聲.ai`)，`PH_PHONE_EXT` = `#`+分機，`PH_PHONE_MOBILE` 有值 |
+| 有手機 + 有分機 | `--mobile "..." --office-ext "..."` | 用預設新版模板 (`20260825-名片模版_TW 街聲.ai`)，`PH_PHONE_EXT` = `#`+分機，`PH_PHONE_MOBILE` 有值 |
 | 有手機 + 無分機 | `--mobile "..." --office-ext ""` | 用預設新版模板，`PH_PHONE_EXT` 留空字串，`PH_PHONE_MOBILE` 有值 |
 | 無手機 + 有分機 | `--mobile "" --office-ext "..."` | 用無手機版模板 (`20260622-名片模版_TW 街聲（無手機）.ai`，`legacy_office=0`)，新框 `PH_PHONE_EXT` = `#`+分機，sidecar 跳過 `PH_PHONE_MOBILE` |
 | 無手機 + 無分機 | `--mobile "" --office-ext ""` | 用無手機版模板，新框 `PH_PHONE_EXT` 留空字串，sidecar 跳過 `PH_PHONE_MOBILE` |
@@ -316,7 +316,7 @@ vCard 與名片**不完全相同**，注意：
 
 腳本內部行為：
 1. `mkdir -p $SV_OUTPUT_BASE/SV/{chinese}_{english}`（TW 版；路徑來自 `~/.config/sv-card/env` 或環境變數，v0.14.0+ `SV_OUTPUT_BASE` 為根目錄、TW 接 `/SV`，預設 `~/Documents/名片/SV/`）
-2. `cp -L $SV_TEMPLATE` 到該資料夾並重新命名為 `{YYYYMMDD}-{chinese}_{english}.ai`（模板預設 `~/.claude/skills/claude-sv-card/templates/20260612-名片模版_TW 街聲.ai`）
+2. `cp -L $SV_TEMPLATE` 到該資料夾並重新命名為 `{YYYYMMDD}-{chinese}_{english}.ai`（模板預設 `~/.claude/skills/claude-sv-card/templates/20260825-名片模版_TW 街聲.ai`）
 3. **寫 sidecar `/tmp/sv_card_fields.json`**，內含 `fields` 區塊（7 個 PH_*）+ `artifacts` 區塊（vCard/QR 所需欄位）。內部推導：
    - `mobile_display = mobile.replace(" ", "-")` → 名片用
    - `vcf_name = en.replace(" ", "") + ".vcf"`
@@ -569,7 +569,7 @@ finalize.jsx 內部行為：
 
 | 用途 | 路徑 |
 |---|---|
-| 模板 .ai（已含 `PH_QRCODE` 命名）| `~/.claude/skills/claude-sv-card/templates/20260612-名片模版_TW 街聲.ai` |
+| 模板 .ai（已含 `PH_QRCODE` 命名）| `~/.claude/skills/claude-sv-card/templates/20260825-名片模版_TW 街聲.ai` |
 | vCard 產生器 | `~/.claude/skills/claude-sv-card/scripts/make_vcard.py` |
 | **QR Code 產生器**（取代 qrcode-monkey）| `~/.claude/skills/claude-sv-card/scripts/make_qr.py` |
 | **Artifacts 合併腳本**（Step 8+9+10a，CLI 介面）| `~/.claude/skills/claude-sv-card/scripts/make_card_artifacts.py` |

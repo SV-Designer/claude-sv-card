@@ -4,6 +4,18 @@
 
 版本號採 [Semantic Versioning](https://semver.org/lang/zh-TW/)：MAJOR.MINOR.PATCH。
 
+## [0.27.0] — 2026-08-26
+
+### Fixed
+- 🔴 **TW 無手機版模板的 `PH_QRCODE` placeholder 沒有名字，導致 `place_qr.jsx` 必定失敗**。該群組（478 個子路徑的 QR 圖樣，位置 315.98,-398.00）在檔案裡一直是無名的，`place_qr.jsx` 靠 `name === "PH_QRCODE"` 尋找，因此無手機版名片走到 Step 10 會回 `ERROR: PH_QRCODE placeholder not found`。本版補上名稱並實測通過（`OK pos=315.98,-398.00 size=39.69`）。有手機版不受影響。
+
+### Changed
+- **TW 無手機版模板 Logo 面同步為 2026-08-25 最新版**：以有手機版新模板為準，替換 Logo 群組（舊 `73.61,-388.97 187.09×32.87` → 新 `78.62,-377.00 177.98×24.01`）、並把其下方群組的 y 由 `-338.14` 對齊到 `-336.14`。同步後兩版 Logo 面的 4 個元件座標與尺寸**逐項完全一致**。檔名不變（`20260622-名片模版_TW 街聲（無手機）.ai`），舊檔備份在 `templates/backups/`。
+  - 因 Illustrator 重新存檔，該檔由 1,667,067 → 486,093 bytes（與其他模板量級一致），並已跑 `normalize_template.sh` 清掉存檔寫入的 `%%For` 本機帳號與視窗座標。
+  - 已跑完整無手機版回歸（Step 1 → 2 → artifacts → 10 → 11 → 12）：`replaced=6`（無 `PH_PHONE_MOBILE`，正確）、QR 就位、`finalize` 回 `removed=3`、產出檔 6 個 `PH_*` 文字全在、畫布外殘留 0。
+- **TW 街聲（有手機）模板更新為 2026-08-25 改版**：`templates/20260612-名片模版_TW 街聲.ai` → `templates/20260825-名片模版_TW 街聲.ai`（設計改版：背面新增北京／上海兩地公司名與地址）。7 個 `PH_*` placeholder 全數保留、相對座標與尺寸與舊版逐項一致（整份隨畫板往下平移 293.6pt，程式不需改邏輯）；文件仍為 CMYK、單一畫板 595×232pt。同步更新 `scripts/card_helper.sh` 的 `SV_TEMPLATE_DEFAULT`、`install.sh` 模板完整性檢查與 `default_template`、`SKILL.md`、`docs/SOP.md`、`README.md`。舊檔移至 `templates/backups/`。
+  - 已跑完整回歸（Step 1 → 2 → artifacts → 10 → 11 → 12）：`replaced=7`、QR `pos=315.98,-691.61 size=39.69`、`finalize` 回 `removed=0`、產出檔 7 個 `PH_*` 文字全在、無畫布外殘留。`check_templates.sh` 通過（7 支模板 35 種文字全在白名單）。
+
 ## [0.26.0] — 2026-08-25
 
 ### Added
