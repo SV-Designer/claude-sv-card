@@ -66,10 +66,10 @@ set -e
 
 # 可由環境變數或 ~/.config/sv-card/env 覆寫
 SV_CARD_SKILL_DIR="${SV_CARD_SKILL_DIR:-$HOME/.claude/skills/claude-sv-card}"
-SV_TEMPLATE_DEFAULT="$SV_CARD_SKILL_DIR/templates/20260825-名片模版_TW 街聲.ai"
+SV_TEMPLATE_DEFAULT="$SV_CARD_SKILL_DIR/templates/20260929-名片模版_TW 街聲.ai"
 SV_TEMPLATE="${SV_TEMPLATE:-$SV_TEMPLATE_DEFAULT}"
 SV_TEMPLATE_NO_MOBILE="${SV_TEMPLATE_NO_MOBILE:-$SV_CARD_SKILL_DIR/templates/20260622-名片模版_TW 街聲（無手機）.ai}"
-SV_TEMPLATE_ZHONGZI="${SV_TEMPLATE_ZHONGZI:-$SV_CARD_SKILL_DIR/templates/20260824-名片模版_中子BVI.ai}"
+SV_TEMPLATE_ZHONGZI="${SV_TEMPLATE_ZHONGZI:-$SV_CARD_SKILL_DIR/templates/20260929-名片模版_中子BVI.ai}"
 # v0.24.0+：中子BVI 無手機版模板（簽呈無手機時自動選用，同 TW 街聲無手機版模式）
 SV_TEMPLATE_ZHONGZI_NO_MOBILE="${SV_TEMPLATE_ZHONGZI_NO_MOBILE:-$SV_CARD_SKILL_DIR/templates/20260824-名片模版_中子BVI（無手機版）.ai}"
 # v0.14.0+：SV_OUTPUT_BASE 改為「名片根目錄」（~/Documents/名片），各版型在其下接子資料夾。

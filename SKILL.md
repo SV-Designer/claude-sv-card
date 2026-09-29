@@ -143,7 +143,7 @@ $.evalFile(Folder("~").fsName + "/.claude/skills/claude-sv-card/scripts/finalize
 
 | 用途 | 路徑 |
 |---|---|
-| 模板 .ai ×4：TW 有手機（預設，`20260825-名片模版_TW 街聲.ai`）／TW 無手機（簽呈無手機時自動選用，`20260622-名片模版_TW 街聲（無手機）.ai`）／中子BVI（`20260824-名片模版_中子BVI.ai`）／台灣中子（`20260824-名片模版_台灣中子.ai`）| `~/.claude/skills/claude-sv-card/templates/` |
+| 模板 .ai ×4：TW 有手機（預設，`20260929-名片模版_TW 街聲.ai`）／TW 無手機（簽呈無手機時自動選用，`20260622-名片模版_TW 街聲（無手機）.ai`）／中子BVI（`20260929-名片模版_中子BVI.ai`）／台灣中子（`20260824-名片模版_台灣中子.ai`）| `~/.claude/skills/claude-sv-card/templates/` |
 | Bash 操作合集 | `~/.claude/skills/claude-sv-card/scripts/card_helper.sh` |
 | vCard + QR + 預處理／簽呈 PDF 備份裁切 | `scripts/make_card_artifacts.py`／`backup_signoff_pdf.py` |
 | 欄位替換／QR 置入／GATE 後收尾 | `scripts/replace_fields.jsx`／`place_qr.jsx`／`finalize.jsx` |
