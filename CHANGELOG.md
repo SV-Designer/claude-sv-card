@@ -4,6 +4,11 @@
 
 版本號採 [Semantic Versioning](https://semver.org/lang/zh-TW/)：MAJOR.MINOR.PATCH。
 
+## [0.29.0] — 2026-09-29
+
+### Changed
+- **TW 街聲／中子 BVI「無手機版」模板同步 2026-09-29 北京地址更新**：`templates/20260622-名片模版_TW 街聲（無手機）.ai` → `templates/20260929-名片模版_TW 街聲（無手機）.ai`；`templates/20260824-名片模版_中子BVI（無手機版）.ai` → `templates/20260929-名片模版_中子BVI（無手機版）.ai`。以 Illustrator MCP 逐一比對新舊版 `PH_*` placeholder 名稱、位置、尺寸，**完全一致**（TW 無手機版 7 個含 `PH_QRCODE`、中子BVI 無手機版 7 個），只有「固定資訊」群組內的地址文字內容改動，程式不需改邏輯。同步更新 `scripts/card_helper.sh` 的 `SV_TEMPLATE_NO_MOBILE`／`SV_TEMPLATE_ZHONGZI_NO_MOBILE`、`install.sh`、`SKILL.md`、`README.md`、`docs/SOP.md`。舊檔移至 `templates/backups/`。台灣中子（含無手機版）本次未動。
+
 ## [0.28.0] — 2026-09-29
 
 ### Changed

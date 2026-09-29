@@ -96,7 +96,7 @@ Claude 自動依序：
 ```
 
 > ✅ **中子 BVI 版已於 v0.14.0 畢業納入自動化白名單**：流程同 TW 全自動，僅 Step 6 GATE 需確認，不再每步停下。上方 8 步流程圖保留供理解分支差異。逐步確認規則（見本檔「🆕 新版型測試 → 畢業規則」節）改為**僅未來新增版型**適用。
-> ✅ **v0.24.0+ 支援無手機版**：簽呈無手機時自動選用 `SV_TEMPLATE_ZHONGZI_NO_MOBILE`（`templates/20260824-名片模版_中子BVI（無手機版）.ai`），與 TW 街聲無手機版同模式，無需再手動處理留白欄位。
+> ✅ **v0.24.0+ 支援無手機版**：簽呈無手機時自動選用 `SV_TEMPLATE_ZHONGZI_NO_MOBILE`（`templates/20260929-名片模版_中子BVI（無手機版）.ai`），與 TW 街聲無手機版同模式，無需再手動處理留白欄位。
 
 ### 台灣中子版分支（v0.12.0+）
 
@@ -203,7 +203,7 @@ Claude 自動依序：
 
 > **v0.15.x 電話框改版**：公司電話 `+886-2-2741-7065` 改為**靜態文字框**（名為「公司電話」，**無 `PH_` 前綴 → 腳本不替換**）；分機獨立成新框 `PH_PHONE_EXT`（值 = `#`+分機，對照 PDF 室內分機；簽呈留白則框留空）。所有現行 template（TW 有手機 / TW 無手機 / 中子BVI / 台灣中子）皆此設計。
 >
-> **v0.18.0**：無手機版已換新排版 `20260622-名片模版_TW 街聲（無手機）.ai`，同採 `PH_PHONE_EXT` 新框（`legacy_office=0`），與有手機版一致。舊合成框 `PH_PHONE_OFFICE` / `legacy_office=1` 分支已無模板使用（程式保留向後相容）。
+> **v0.18.0**：無手機版已換新排版 `20260929-名片模版_TW 街聲（無手機）.ai`，同採 `PH_PHONE_EXT` 新框（`legacy_office=0`），與有手機版一致。舊合成框 `PH_PHONE_OFFICE` / `legacy_office=1` 分支已無模板使用（程式保留向後相容）。
 
 QR Code 命名（置入後）：`PH_QRCODE`（模板已內建命名，直接用名字找）
 
@@ -239,10 +239,10 @@ QR Code 命名（置入後）：`PH_QRCODE`（模板已內建命名，直接用�
 |---|---|---|
 | 有手機 + 有分機 | `--mobile "..." --office-ext "..."` | 用預設新版模板 (`20260929-名片模版_TW 街聲.ai`)，`PH_PHONE_EXT` = `#`+分機，`PH_PHONE_MOBILE` 有值 |
 | 有手機 + 無分機 | `--mobile "..." --office-ext ""` | 用預設新版模板，`PH_PHONE_EXT` 留空字串，`PH_PHONE_MOBILE` 有值 |
-| 無手機 + 有分機 | `--mobile "" --office-ext "..."` | 用無手機版模板 (`20260622-名片模版_TW 街聲（無手機）.ai`，`legacy_office=0`)，新框 `PH_PHONE_EXT` = `#`+分機，sidecar 跳過 `PH_PHONE_MOBILE` |
+| 無手機 + 有分機 | `--mobile "" --office-ext "..."` | 用無手機版模板 (`20260929-名片模版_TW 街聲（無手機）.ai`，`legacy_office=0`)，新框 `PH_PHONE_EXT` = `#`+分機，sidecar 跳過 `PH_PHONE_MOBILE` |
 | 無手機 + 無分機 | `--mobile "" --office-ext ""` | 用無手機版模板，新框 `PH_PHONE_EXT` 留空字串，sidecar 跳過 `PH_PHONE_MOBILE` |
 
-> ✅ **無手機版已更新成新電話框設計（v0.18.0）**：四款現行模板（TW 有手機 / TW 無手機 / 中子BVI / 台灣中子）皆「公司電話靜態 + `PH_PHONE_EXT`」，無手機版改用 `20260622-名片模版_TW 街聲（無手機）.ai`、走 `legacy_office=0`。舊 `PH_PHONE_OFFICE` 合成框 / `legacy_office=1` 分支已無模板使用，程式保留作向後相容。
+> ✅ **無手機版已更新成新電話框設計（v0.18.0）**：四款現行模板（TW 有手機 / TW 無手機 / 中子BVI / 台灣中子）皆「公司電話靜態 + `PH_PHONE_EXT`」，無手機版改用 `20260929-名片模版_TW 街聲（無手機）.ai`、走 `legacy_office=0`。舊 `PH_PHONE_OFFICE` 合成框 / `legacy_office=1` 分支已無模板使用，程式保留作向後相容。
 
 ### vCard 特殊欄位
 
@@ -607,7 +607,7 @@ finalize.jsx 內部行為：
 
 - ✅ PDF 自動萃取（v0.8.6，`extract_signoff_fields.py` + 雙重檢核流程）
 - ✅ QR Code 生成自動化（`make_qr.py` 取代 qrcode-monkey）
-- ✅ 無手機號碼版（v0.8.0；v0.18.0 換新排版 `20260622-名片模版_TW 街聲（無手機）.ai`，改新分機框 `PH_PHONE_EXT`）
+- ✅ 無手機號碼版（v0.8.0；v0.18.0 換新排版 `20260929-名片模版_TW 街聲（無手機）.ai`，改新分機框 `PH_PHONE_EXT`）
 - ✅ `install.sh` 同步檢查 `pypdf` / `pdfplumber`（v0.8.8）
 - ✅ `extract_signoff_fields.py` 全面 regex 收緊（v0.8.9，8 條 `\s` → `[ \t]`，#554 回歸測試 diff 為空）
 - ✅ 公司固定資訊抽離至 `~/.config/sv-card/company.json`（v0.9.0，`company_config.py` 載入器 + fallback DEFAULTS，3 處 hardcoded 改 1 處設定）
