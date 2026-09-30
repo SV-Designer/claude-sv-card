@@ -184,10 +184,10 @@ echo
 echo "🗂️  檢查版型模板..."
 tpl_missing=0
 for tpl in \
-    "20260929-名片模版_TW 街聲.ai|TW 街聲（有手機，預設）" \
-    "20260929-名片模版_TW 街聲（無手機）.ai|TW 街聲（無手機）" \
-    "20260929-名片模版_中子BVI.ai|中子 BVI（有手機，預設）" \
-    "20260929-名片模版_中子BVI（無手機版）.ai|中子 BVI（無手機）" \
+    "20260930-名片模版_TW 街聲.ai|TW 街聲（有手機，預設）" \
+    "20260930-名片模版_TW 街聲（無手機）.ai|TW 街聲（無手機）" \
+    "20260930-名片模版_中子BVI.ai|中子 BVI（有手機，預設）" \
+    "20260930-名片模版_中子BVI（無手機版）.ai|中子 BVI（無手機）" \
     "20260824-名片模版_台灣中子.ai|台灣中子（有手機，預設）" \
     "20260824-名片模版_台灣中子（無手機版）.ai|台灣中子（無手機）" \
     "20260622-名片模版_經典復刻款.ai|經典復刻款 BVI（半自動）"; do
@@ -240,7 +240,7 @@ echo "⚙️  寫入使用者偏好 $CONFIG_FILE ..."
 mkdir -p "$CONFIG_DIR"
 
 default_output="$HOME/Documents/名片"  # v0.14.0+：名片根目錄；TW 版自動接 /SV 子夾
-default_template="$SKILL_DIR/templates/20260929-名片模版_TW 街聲.ai"
+default_template="$SKILL_DIR/templates/20260930-名片模版_TW 街聲.ai"
 
 # 若已有舊設定，沿用為新預設
 if [ -f "$CONFIG_FILE" ]; then
